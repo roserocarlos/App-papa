@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -35,246 +36,249 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── HEADER ── */
-    header {
-      background: var(--verde);
-      color: #fff;
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .logo {
-      width: 42px; height: 42px;
-      background: rgba(255,255,255,0.15);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; flex-shrink: 0;
-    }
-    .header-text h1 {
-      font-family: var(--serif);
-      font-size: clamp(1rem, 4vw, 1.35rem);
-      font-weight: 700;
-      line-height: 1.2;
-    }
-    .header-text p {
-      font-size: 0.65rem;
-      opacity: 0.75;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-    .header-badge {
-      margin-left: auto;
-      font-size: 0.6rem;
-      text-align: right;
-      opacity: 0.7;
-      line-height: 1.7;
-      flex-shrink: 0;
-    }
+```
+/* ── HEADER ── */
+header {
+  background: var(--verde);
+  color: #fff;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.logo {
+  width: 42px; height: 42px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.header-text h1 {
+  font-family: var(--serif);
+  font-size: clamp(1rem, 4vw, 1.35rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.header-text p {
+  font-size: 0.65rem;
+  opacity: 0.75;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.header-badge {
+  margin-left: auto;
+  font-size: 0.6rem;
+  text-align: right;
+  opacity: 0.7;
+  line-height: 1.7;
+  flex-shrink: 0;
+}
 
-    /* ── LAYOUT ── */
-    .wrap { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+/* ── LAYOUT ── */
+.wrap { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
 
-    /* ── BANNER ── */
-    #banner {
-      display: none;
-      margin-bottom: 14px;
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      line-height: 1.5;
-      border-left: 3px solid;
-    }
-    #banner.warn { background: #fef9ec; border-color: var(--ocre); color: #7a4a0a; }
-    #banner.err  { background: #fdf0f0; border-color: var(--rojo); color: #7a1c1e; }
+/* ── BANNER ── */
+#banner {
+  display: none;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  border-left: 3px solid;
+}
+#banner.warn { background: #fef9ec; border-color: var(--ocre); color: #7a4a0a; }
+#banner.err  { background: #fdf0f0; border-color: var(--rojo); color: #7a1c1e; }
 
-    /* ── KPI GRID ── */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    @media(min-width:540px){ .kpi-grid { grid-template-columns: repeat(4,1fr); } }
-    .kpi {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
-      border-top: 3px solid var(--border);
-      opacity: 0; transform: translateY(6px);
-      transition: opacity .35s ease, transform .35s ease;
-    }
-    .kpi.visible { opacity:1; transform:none; }
-    .kpi.verde { border-top-color: var(--verde); }
-    .kpi.ocre  { border-top-color: var(--ocre); }
-    .kpi.rojo  { border-top-color: var(--rojo); }
-    .kpi-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); margin-bottom: 6px; }
-    .kpi-value { font-family: var(--serif); font-size: clamp(1.2rem,3.5vw,1.6rem); font-weight: 700; color: var(--text); line-height: 1; }
-    .kpi-sub   { font-size: 0.63rem; color: var(--text-dim); margin-top: 4px; }
-    .kpi.ocre .kpi-value { color: var(--ocre); }
-    .kpi.verde .kpi-value { color: var(--verde); }
-    .kpi.rojo  .kpi-value { color: var(--rojo); }
+/* ── KPI GRID ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+@media(min-width:540px){ .kpi-grid { grid-template-columns: repeat(4,1fr); } }
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  border-top: 3px solid var(--border);
+  opacity: 0; transform: translateY(6px);
+  transition: opacity .35s ease, transform .35s ease;
+}
+.kpi.visible { opacity:1; transform:none; }
+.kpi.verde { border-top-color: var(--verde); }
+.kpi.ocre  { border-top-color: var(--ocre); }
+.kpi.rojo  { border-top-color: var(--rojo); }
+.kpi-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); margin-bottom: 6px; }
+.kpi-value { font-family: var(--serif); font-size: clamp(1.2rem,3.5vw,1.6rem); font-weight: 700; color: var(--text); line-height: 1; }
+.kpi-sub   { font-size: 0.63rem; color: var(--text-dim); margin-top: 4px; }
+.kpi.ocre .kpi-value { color: var(--ocre); }
+.kpi.verde .kpi-value { color: var(--verde); }
+.kpi.rojo  .kpi-value { color: var(--rojo); }
 
-    /* ── DOS COLUMNAS (chart + panel lateral) ── */
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-    @media(min-width:700px){ .main-grid { grid-template-columns: 1fr 300px; } }
+/* ── DOS COLUMNAS (chart + panel lateral) ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+@media(min-width:700px){ .main-grid { grid-template-columns: 1fr 300px; } }
 
-    /* ── PANEL ── */
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 14px;
-    }
-    .panel-head {
-      padding: 11px 16px;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      color: var(--text-dim);
-      background: var(--surface2);
-      display: flex; align-items: center; gap: 6px;
-    }
-    .panel-head .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--verde2); flex-shrink: 0;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+/* ── PANEL ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.panel-head {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-dim);
+  background: var(--surface2);
+  display: flex; align-items: center; gap: 6px;
+}
+.panel-head .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--verde2); flex-shrink: 0;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-    /* ── CHART ── */
-    #chart { width:100%; height:340px; }
-    @media(max-width:480px){ #chart { height:260px; } }
+/* ── CHART ── */
+#chart { width:100%; height:340px; }
+@media(max-width:480px){ #chart { height:260px; } }
 
-    /* ── STATUS ── */
-    #status {
-      font-size: 0.65rem;
-      color: var(--text-dim);
-      padding: 8px 16px;
-      border-top: 1px solid var(--border);
-      display: flex; align-items: center; gap: 6px;
-      min-height: 34px;
-    }
-    #status.ok  { color: var(--verde); }
-    #status.err { color: var(--rojo); }
-    #status.warn { color: var(--ocre); }
-    .spinner {
-      width:11px; height:11px; flex-shrink:0;
-      border: 2px solid var(--border);
-      border-top-color: var(--verde);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
-    @keyframes spin{ to{transform:rotate(360deg)} }
+/* ── STATUS ── */
+#status {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px;
+  min-height: 34px;
+}
+#status.ok  { color: var(--verde); }
+#status.err { color: var(--rojo); }
+#status.warn { color: var(--ocre); }
+.spinner {
+  width:11px; height:11px; flex-shrink:0;
+  border: 2px solid var(--border);
+  border-top-color: var(--verde);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin{ to{transform:rotate(360deg)} }
 
-    /* ── PREDICCIÓN TABLE ── */
-    .pred-table { width:100%; border-collapse:collapse; }
-    .pred-table th {
-      font-size: 0.58rem; text-transform:uppercase; letter-spacing:.06em;
-      color: var(--text-dim); padding: 8px 16px; text-align:left;
-      border-bottom: 1px solid var(--border);
-    }
-    .pred-table td { padding: 9px 16px; font-size:0.78rem; border-bottom:1px solid var(--border); }
-    .pred-table tr:last-child td { border-bottom:none; }
-    .pred-table tr:hover td { background: var(--surface2); }
-    .delta-pos { color: var(--rojo); }
-    .delta-neg { color: var(--verde); }
-    .delta-neu { color: var(--text-dim); }
+/* ── PREDICCIÓN TABLE ── */
+.pred-table { width:100%; border-collapse:collapse; }
+.pred-table th {
+  font-size: 0.58rem; text-transform:uppercase; letter-spacing:.06em;
+  color: var(--text-dim); padding: 8px 16px; text-align:left;
+  border-bottom: 1px solid var(--border);
+}
+.pred-table td { padding: 9px 16px; font-size:0.78rem; border-bottom:1px solid var(--border); }
+.pred-table tr:last-child td { border-bottom:none; }
+.pred-table tr:hover td { background: var(--surface2); }
+.delta-pos { color: var(--rojo); }
+.delta-neg { color: var(--verde); }
+.delta-neu { color: var(--text-dim); }
 
-    /* ── PANEL LATERAL ── */
-    .side-col { display:flex; flex-direction:column; gap:14px; }
+/* ── PANEL LATERAL ── */
+.side-col { display:flex; flex-direction:column; gap:14px; }
 
-    /* ── CLIMA ── */
-    .clima-row {
-      display:flex; flex-direction:column; gap:0;
-    }
-    .clima-dia {
-      padding: 9px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 0.72rem;
-    }
-    .clima-dia:last-child { border-bottom:none; }
-    .clima-fecha { color: var(--text-dim); font-size:0.62rem; }
-    .clima-lluvia { color: #2176ae; font-weight:600; }
-    .clima-temp { color: var(--text-dim); font-size:0.65rem; }
+/* ── CLIMA ── */
+.clima-row {
+  display:flex; flex-direction:column; gap:0;
+}
+.clima-dia {
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 0.72rem;
+}
+.clima-dia:last-child { border-bottom:none; }
+.clima-fecha { color: var(--text-dim); font-size:0.62rem; }
+.clima-lluvia { color: #2176ae; font-weight:600; }
+.clima-temp { color: var(--text-dim); font-size:0.65rem; }
 
-    /* ── ENTRADA MANUAL ── */
-    .input-group { padding: 14px 16px; display:flex; flex-direction:column; gap:10px; }
-    .field { display:flex; flex-direction:column; gap:4px; }
-    .field label { font-size:0.62rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); }
-    .field input {
-      font-family: var(--mono);
-      font-size: 0.85rem;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      background: var(--bg);
-      color: var(--text);
-      width: 100%;
-      transition: border-color .2s;
-    }
-    .field input:focus { outline:none; border-color: var(--verde2); }
-    .field .hint { font-size:0.58rem; color:var(--text-dim); }
-    .btn-aplicar {
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      padding: 9px 16px;
-      background: var(--verde);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background .2s;
-      width: 100%;
-    }
-    .btn-aplicar:hover { background: #1f4d38; }
+/* ── ENTRADA MANUAL ── */
+.input-group { padding: 14px 16px; display:flex; flex-direction:column; gap:10px; }
+.field { display:flex; flex-direction:column; gap:4px; }
+.field label { font-size:0.62rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); }
+.field input {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+  transition: border-color .2s;
+}
+.field input:focus { outline:none; border-color: var(--verde2); }
+.field .hint { font-size:0.58rem; color:var(--text-dim); }
+.btn-aplicar {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 9px 16px;
+  background: var(--verde);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background .2s;
+  width: 100%;
+}
+.btn-aplicar:hover { background: #1f4d38; }
 
-    /* ── ABASTECIMIENTO ── */
-    .abs-value { padding: 14px 16px; }
-    .abs-num { font-family: var(--serif); font-size:1.4rem; font-weight:700; color:var(--verde); }
-    .abs-label { font-size:0.62rem; color:var(--text-dim); margin-top:3px; }
-    .abs-mes { font-size:0.65rem; color:var(--text-dim); }
+/* ── ABASTECIMIENTO ── */
+.abs-value { padding: 14px 16px; }
+.abs-num { font-family: var(--serif); font-size:1.4rem; font-weight:700; color:var(--verde); }
+.abs-label { font-size:0.62rem; color:var(--text-dim); margin-top:3px; }
+.abs-mes { font-size:0.65rem; color:var(--text-dim); }
 
-    /* ── BOTONES ── */
-    .action-row { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
-    .btn {
-      font-family:var(--mono); font-size:0.65rem;
-      padding: 6px 12px; border-radius:5px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text-dim);
-      cursor:pointer; transition: border-color .2s, color .2s;
-    }
-    .btn:hover:not(:disabled) { border-color:var(--verde); color:var(--verde); }
-    .btn:disabled { opacity:.4; cursor:not-allowed; }
+/* ── BOTONES ── */
+.action-row { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
+.btn {
+  font-family:var(--mono); font-size:0.65rem;
+  padding: 6px 12px; border-radius:5px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text-dim);
+  cursor:pointer; transition: border-color .2s, color .2s;
+}
+.btn:hover:not(:disabled) { border-color:var(--verde); color:var(--verde); }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
 
-    /* ── SKELETON ── */
-    .sk {
-      background: linear-gradient(90deg, var(--surface2) 25%, #e8ede3 50%, var(--surface2) 75%);
-      background-size:200% 100%;
-      animation: sk 1.5s infinite;
-      border-radius:4px;
-    }
-    @keyframes sk{ to{background-position:-200% 0} }
+/* ── SKELETON ── */
+.sk {
+  background: linear-gradient(90deg, var(--surface2) 25%, #e8ede3 50%, var(--surface2) 75%);
+  background-size:200% 100%;
+  animation: sk 1.5s infinite;
+  border-radius:4px;
+}
+@keyframes sk{ to{background-position:-200% 0} }
 
-    /* ── NOTA ── */
-    .note { font-size:.6rem; color:var(--text-dim); text-align:center; margin-top:24px; line-height:2; }
-    .note a { color:var(--verde); text-decoration:none; }
-    .tag-modelo {
-      display:inline-block; font-size:.55rem; padding:2px 6px;
-      background:var(--surface2); border:1px solid var(--border);
-      border-radius:10px; color:var(--text-dim); vertical-align:middle;
-    }
+/* ── NOTA ── */
+.note { font-size:.6rem; color:var(--text-dim); text-align:center; margin-top:24px; line-height:2; }
+.note a { color:var(--verde); text-decoration:none; }
+.tag-modelo {
+  display:inline-block; font-size:.55rem; padding:2px 6px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; color:var(--text-dim); vertical-align:middle;
+}
+```
+
   </style>
 </head>
 <body>
@@ -296,6 +300,7 @@
   <div id="banner"></div>
 
   <!-- KPI CARDS -->
+
   <div class="kpi-grid">
     <div class="kpi verde" id="kpiHoy">
       <div class="kpi-label">Precio hoy</div>
@@ -321,72 +326,75 @@
 
   <div class="main-grid">
 
-    <!-- COLUMNA PRINCIPAL -->
-    <div>
-      <!-- GRÁFICA -->
-      <div class="panel">
-        <div class="panel-head">
-          <span class="dot"></span>
-          Histórico + Predicción 7 días
-          <span id="tagModelo" class="tag-modelo" style="margin-left:auto;"></span>
-        </div>
-        <div id="chart"></div>
-        <div id="status"><div class="spinner"></div> Consultando SIPSA del DANE…</div>
-      </div>
-
-      <!-- TABLA PREDICCIÓN -->
-      <div class="panel" id="predPanel" style="display:none;">
-        <div class="panel-head">📅 Predicción detallada — próximos 7 días</div>
-        <table class="pred-table">
-          <thead><tr><th>Día</th><th>Fecha</th><th>Precio est.</th><th>Δ hoy</th></tr></thead>
-          <tbody id="predBody"></tbody>
-        </table>
-      </div>
-
-      <div class="action-row">
-        <button class="btn" id="btnRecargar">↺ Recargar</button>
-        <button class="btn" id="btnCsv" disabled>↓ CSV</button>
-      </div>
+```
+<!-- COLUMNA PRINCIPAL -->
+<div>
+  <!-- GRÁFICA -->
+  <div class="panel">
+    <div class="panel-head">
+      <span class="dot"></span>
+      Histórico + Predicción 7 días
+      <span id="tagModelo" class="tag-modelo" style="margin-left:auto;"></span>
     </div>
+    <div id="chart"></div>
+    <div id="status"><div class="spinner"></div> Consultando SIPSA del DANE…</div>
+  </div>
 
-    <!-- COLUMNA LATERAL -->
-    <div class="side-col">
+  <!-- TABLA PREDICCIÓN -->
+  <div class="panel" id="predPanel" style="display:none;">
+    <div class="panel-head">📅 Predicción detallada — próximos 7 días</div>
+    <table class="pred-table">
+      <thead><tr><th>Día</th><th>Fecha</th><th>Precio est.</th><th>Δ hoy</th></tr></thead>
+      <tbody id="predBody"></tbody>
+    </table>
+  </div>
 
-      <!-- CLIMA PRONÓSTICO -->
-      <div class="panel" id="climaPanel" style="display:none;">
-        <div class="panel-head">🌧 Clima Ipiales — 7 días</div>
-        <div class="clima-row" id="climaBody"></div>
+  <div class="action-row">
+    <button class="btn" id="btnRecargar">↺ Recargar</button>
+    <button class="btn" id="btnCsv" disabled>↓ CSV</button>
+  </div>
+</div>
+
+<!-- COLUMNA LATERAL -->
+<div class="side-col">
+
+  <!-- CLIMA PRONÓSTICO -->
+  <div class="panel" id="climaPanel" style="display:none;">
+    <div class="panel-head">🌧 Clima Ipiales — 7 días</div>
+    <div class="clima-row" id="climaBody"></div>
+  </div>
+
+  <!-- ENTRADA MANUAL -->
+  <div class="panel">
+    <div class="panel-head">⚙ Variables locales</div>
+    <div class="input-group">
+      <div class="field">
+        <label>ACPM Pasto ($/galón)</label>
+        <input type="number" id="inputAcpm" value="11282" min="5000" max="30000" step="100">
+        <span class="hint">Fuente: CREG · actualizar mensualmente</span>
       </div>
-
-      <!-- ENTRADA MANUAL -->
-      <div class="panel">
-        <div class="panel-head">⚙ Variables locales</div>
-        <div class="input-group">
-          <div class="field">
-            <label>ACPM Pasto ($/galón)</label>
-            <input type="number" id="inputAcpm" value="11282" min="5000" max="30000" step="100">
-            <span class="hint">Fuente: CREG · actualizar mensualmente</span>
-          </div>
-          <div class="field">
-            <label>Precio frontera Ipiales ($/kg)</label>
-            <input type="number" id="inputFrontera" value="0" min="0" max="10000" step="50">
-            <span class="hint">Plaza de mercado local · 0 = sin dato</span>
-          </div>
-          <button class="btn-aplicar" id="btnAplicar">Aplicar y recalcular</button>
-        </div>
+      <div class="field">
+        <label>Precio frontera Ipiales ($/kg)</label>
+        <input type="number" id="inputFrontera" value="0" min="0" max="10000" step="50">
+        <span class="hint">Plaza de mercado local · 0 = sin dato</span>
       </div>
-
-      <!-- ABASTECIMIENTO -->
-      <div class="panel" id="absPanel" style="display:none;">
-        <div class="panel-head">📦 Abastecimiento nacional</div>
-        <div class="abs-value">
-          <div class="abs-num" id="absNum">—</div>
-          <div class="abs-label">toneladas de papa</div>
-          <div class="abs-mes" id="absMes">—</div>
-        </div>
-      </div>
-
+      <button class="btn-aplicar" id="btnAplicar">Aplicar y recalcular</button>
     </div>
+  </div>
+
+  <!-- ABASTECIMIENTO -->
+  <div class="panel" id="absPanel" style="display:none;">
+    <div class="panel-head">📦 Abastecimiento nacional</div>
+    <div class="abs-value">
+      <div class="abs-num" id="absNum">—</div>
+      <div class="abs-label">toneladas de papa</div>
+      <div class="abs-mes" id="absMes">—</div>
+    </div>
+  </div>
+
+</div>
+```
+
   </div>
 
   <p class="note">
@@ -580,7 +588,20 @@ async function cargar(force = false) {
 
   try {
     const r = await fetch(`${API}?${params}`);
-    const data = await r.json();
+
+    // Leer texto primero — si Vercel devuelve HTML de error, JSON.parse fallaría
+    const texto = await r.text();
+    let data;
+    try {
+      data = JSON.parse(texto);
+    } catch (_) {
+      // Respuesta no-JSON (página de error de Vercel, timeout, etc.)
+      mostrarBanner('err', '⚠ El servidor devolvió una respuesta inesperada. Intente recargar en unos minutos.');
+      st.className = 'err';
+      st.innerHTML = `✗ Error del servidor (HTTP ${r.status}) — intente más tarde`;
+      console.error('Respuesta no-JSON:', texto.slice(0, 200));
+      return;
+    }
 
     if (!r.ok || !data.ok) {
       mostrarBanner('err', `⚠ ${data.error || 'Error desconocido'}. ${data.sugerencia || ''}`);
@@ -634,5 +655,6 @@ $('btnAplicar').addEventListener('click', () => {
 
 cargar();
 </script>
+
 </body>
 </html>
