@@ -229,7 +229,6 @@ const serie = await fetchPrecios();
 const precios = serie.map(function(d){return d.precio;});
 const n = precios.length;
 
-```
 // Indicadores sobre toda la serie
 const rsi14   = calcRSI(precios, 14);
 const rsi7    = calcRSI(precios, 7);
@@ -302,7 +301,6 @@ return res.status(200).json({
                      'SIN SEÑAL FUERTE',
   },
 });
-```
 
 } catch(e) {
 return res.status(500).json({ ok: false, error: e.message });
