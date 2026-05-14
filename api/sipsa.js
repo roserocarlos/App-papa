@@ -290,7 +290,6 @@ fetchClima(ZONAS.tuquerres.lat, ZONAS.tuquerres.lon).catch(function(){ return { 
 const climaIpiales   = climaResults[0];
 const climaTuquerres = climaResults[1];
 
-```
   const prediccion = modeloMultivariado(historico, climaIpiales, climaTuquerres, abastecimiento, acpm);
 
   const climaPronostico = climaIpiales.pronostico.slice(0,7).map(function(d) {
