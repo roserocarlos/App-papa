@@ -322,7 +322,6 @@ const climaTuquerres = climaResults[1];
   console.error('[sipsa] intento ' + intento + ':', e.message);
   if (intento === 1) await new Promise(function(r){ setTimeout(r, 2000); });
 }
-```
 
 }
 
