@@ -64,7 +64,7 @@ return Object.entries(porFecha)
 
 // ─── SIPSA: abastecimiento mensual ────────────────────────────────────────────
 async function fetchAbastecimiento() {
-const xml = await fetchSOAP(`<?xml version="1.0" encoding="UTF-8"?> <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:ser="http://servicios.sipsa.co.gov.dane/"> <soap:Header/><soap:Body><ser:promedioAbasSipsaMesMadr/></soap:Body> </soap:Envelope>`, 25000);
+const xml = await fetchSOAP(`<?xml version="1.0" encoding="UTF-8"?> <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:ser="http://servicios.sipsa.co.gov.dane/"> <soap:Header/><soap:Body><ser:promedioAbasSipsaMesMadr/></soap:Body> </soap:Envelope>`, 10000); // 10s — no crítico, fallback a []
 
 const blockRe = /<(?:[^:>\s]+:)?return>([\s\S]*?)</(?:[^:>\s]+:)?return>/g;
 // porMes: { ‘YYYY-MM’: { fuentes: Set(), ton: number } }
@@ -242,20 +242,19 @@ let ultimoError = null;
 
 for (let intento = 1; intento <= 2; intento++) {
 try {
-// Ejecutar todas las fuentes en paralelo (clima no bloquea si falla)
-const [
-historico,
-abastecimiento,
-climaIpiales,
-climaTuquerres,
-] = await Promise.all([
-fetchPrecios(),
-fetchAbastecimiento().catch(() => []),
-fetchClima(ZONAS.ipiales.lat,   ZONAS.ipiales.lon).catch(() => ({ historico:[], pronostico:[] })),
-fetchClima(ZONAS.tuquerres.lat, ZONAS.tuquerres.lon).catch(() => ({ historico:[], pronostico:[] })),
-]);
+// Precios DANE primero (crítico) — secuencial para no sobrecargar el SOAP
+const historico = await fetchPrecios();
 
 ```
+  // Abastecimiento DANE segundo — si falla no bloquea
+  const abastecimiento = await fetchAbastecimiento().catch(() => []);
+
+  // Clima Open-Meteo en paralelo (servidor diferente, sin riesgo)
+  const [climaIpiales, climaTuquerres] = await Promise.all([
+    fetchClima(ZONAS.ipiales.lat,   ZONAS.ipiales.lon).catch(() => ({ historico:[], pronostico:[] })),
+    fetchClima(ZONAS.tuquerres.lat, ZONAS.tuquerres.lon).catch(() => ({ historico:[], pronostico:[] })),
+  ]);
+
   const prediccion = modeloMultivariado(historico, climaIpiales, climaTuquerres, abastecimiento, acpm);
 
   // Clima pronóstico para mostrar en front
