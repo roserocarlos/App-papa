@@ -1,28 +1,32 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#1a120b">
-  <title>Precio Papa · Colombia SIPSA</title>
+  <meta name="theme-color" content="#f5f7f2">
+  <title>Precio Papa Colombia · SIPSA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inconsolata:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
   <style>
     :root {
-      --bg:        #1a120b;
-      --surface:   #231810;
-      --surface2:  #2e1f13;
-      --border:    #3d2a1a;
-      --gold:      #d4942a;
-      --gold-dim:  #7a5218;
-      --green:     #4e8c5f;
-      --red:       #b84040;
-      --text:      #e8ddd0;
-      --text-dim:  #8a7060;
-      --mono:      'Inconsolata', monospace;
-      --serif:     'Playfair Display', Georgia, serif;
+      --bg:        #f5f7f2;
+      --surface:   #ffffff;
+      --surface2:  #eef1ea;
+      --border:    #d4dace;
+      --verde:     #2d6a4f;
+      --verde2:    #52b788;
+      --verde-dim: #b7d5c4;
+      --ocre:      #c77b2e;
+      --ocre-dim:  #f0d9be;
+      --rojo:      #b5363a;
+      --text:      #1c2b1e;
+      --text-dim:  #6b7d6e;
+      --mono:      'IBM Plex Mono', monospace;
+      --serif:     'Source Serif 4', Georgia, serif;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -30,370 +34,526 @@
       min-height: 100dvh;
       -webkit-font-smoothing: antialiased;
     }
-    body::before {
-      content: '';
-      position: fixed; inset: 0; z-index: 0; pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      opacity: 0.35;
-    }
-    .wrap {
-      position: relative; z-index: 1;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0 16px 56px;
-    }
 
-    /* HEADER */
+    /* ── HEADER ── */
     header {
-      border-bottom: 1px solid var(--border);
-      padding: 20px 0 18px;
+      background: var(--verde);
+      color: #fff;
+      padding: 16px 20px;
       display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 12px;
+      align-items: center;
+      gap: 14px;
     }
-    .header-left h1 {
+    .logo {
+      width: 42px; height: 42px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .header-text h1 {
       font-family: var(--serif);
-      font-size: clamp(1.4rem, 6vw, 2rem);
-      font-weight: 900;
-      color: var(--gold);
-      line-height: 1.1;
+      font-size: clamp(1rem, 4vw, 1.35rem);
+      font-weight: 700;
+      line-height: 1.2;
     }
-    .header-left p {
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      letter-spacing: 0.1em;
+    .header-text p {
+      font-size: 0.65rem;
+      opacity: 0.75;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin-top: 4px;
+      margin-top: 2px;
     }
     .header-badge {
-      font-size: 0.62rem;
-      color: var(--text-dim);
+      margin-left: auto;
+      font-size: 0.6rem;
       text-align: right;
+      opacity: 0.7;
       line-height: 1.7;
       flex-shrink: 0;
     }
-    .dot-live {
-      display: inline-block;
-      width: 6px; height: 6px;
-      background: var(--green);
-      border-radius: 50%;
-      margin-right: 4px;
-      animation: pulse 2s ease-in-out infinite;
-    }
-    .dot-live.warn { background: var(--gold); }
-    .dot-live.err  { background: var(--red); animation: none; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    /* BANNER DE ADVERTENCIA */
+    /* ── LAYOUT ── */
+    .wrap { max-width: 960px; margin: 0 auto; padding: 20px 16px 60px; }
+
+    /* ── BANNER ── */
     #banner {
       display: none;
-      margin: 12px 0 0;
+      margin-bottom: 14px;
       padding: 10px 14px;
-      border-radius: 8px;
+      border-radius: 6px;
       font-size: 0.72rem;
       line-height: 1.5;
-      border: 1px solid;
+      border-left: 3px solid;
     }
-    #banner.warn {
-      background: #2a1f08;
-      border-color: var(--gold-dim);
-      color: #d4b472;
-    }
-    #banner.err {
-      background: #2a0f0f;
-      border-color: #7a2020;
-      color: #e08080;
-    }
+    #banner.warn { background: #fef9ec; border-color: var(--ocre); color: #7a4a0a; }
+    #banner.err  { background: #fdf0f0; border-color: var(--rojo); color: #7a1c1e; }
 
-    /* KPI GRID */
+    /* ── KPI GRID ── */
     .kpi-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
-      margin: 16px 0;
+      margin-bottom: 16px;
     }
-    @media (min-width: 540px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+    @media(min-width:540px){ .kpi-grid { grid-template-columns: repeat(4,1fr); } }
     .kpi {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 14px 14px 12px;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity 0.4s ease, transform 0.4s ease;
+      padding: 14px;
+      border-top: 3px solid var(--border);
+      opacity: 0; transform: translateY(6px);
+      transition: opacity .35s ease, transform .35s ease;
     }
-    .kpi.visible { opacity: 1; transform: none; }
-    .kpi-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 8px; }
-    .kpi-value { font-family: var(--serif); font-size: clamp(1.3rem,4vw,1.7rem); font-weight: 700; color: var(--text); line-height: 1; }
-    .kpi-sub   { font-size: 0.65rem; color: var(--text-dim); margin-top: 5px; }
-    .kpi.up   .kpi-value { color: var(--red); }
-    .kpi.down .kpi-value { color: var(--green); }
-    .kpi.gold .kpi-value { color: var(--gold); }
+    .kpi.visible { opacity:1; transform:none; }
+    .kpi.verde { border-top-color: var(--verde); }
+    .kpi.ocre  { border-top-color: var(--ocre); }
+    .kpi.rojo  { border-top-color: var(--rojo); }
+    .kpi-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); margin-bottom: 6px; }
+    .kpi-value { font-family: var(--serif); font-size: clamp(1.2rem,3.5vw,1.6rem); font-weight: 700; color: var(--text); line-height: 1; }
+    .kpi-sub   { font-size: 0.63rem; color: var(--text-dim); margin-top: 4px; }
+    .kpi.ocre .kpi-value { color: var(--ocre); }
+    .kpi.verde .kpi-value { color: var(--verde); }
+    .kpi.rojo  .kpi-value { color: var(--rojo); }
 
-    /* CHART */
-    .chart-box {
+    /* ── DOS COLUMNAS (chart + panel lateral) ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media(min-width:700px){ .main-grid { grid-template-columns: 1fr 300px; } }
+
+    /* ── PANEL ── */
+    .panel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       overflow: hidden;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
-    .chart-topbar {
-      padding: 14px 16px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .panel-head {
+      padding: 11px 16px;
       border-bottom: 1px solid var(--border);
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .chart-topbar-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
-    .legend-row { display: flex; gap: 14px; }
-    .legend-item { font-size: 0.62rem; color: var(--text-dim); display: flex; align-items: center; gap: 5px; }
-    .legend-line { display: inline-block; width: 18px; height: 2px; border-radius: 1px; }
-    .legend-line.dotted { background: repeating-linear-gradient(90deg,var(--gold) 0 4px,transparent 4px 7px); }
-    #chart { width: 100%; height: 360px; }
-    @media (max-width: 480px) { #chart { height: 280px; } }
-
-    /* STATUS */
-    #status {
       font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
       color: var(--text-dim);
-      padding: 10px 16px;
+      background: var(--surface2);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .panel-head .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--verde2); flex-shrink: 0;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── CHART ── */
+    #chart { width:100%; height:340px; }
+    @media(max-width:480px){ #chart { height:260px; } }
+
+    /* ── STATUS ── */
+    #status {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      padding: 8px 16px;
       border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 38px;
-      flex-wrap: wrap;
+      display: flex; align-items: center; gap: 6px;
+      min-height: 34px;
     }
-    #status.err  { color: var(--red); }
-    #status.ok   { color: var(--green); }
-    #status.warn { color: #d4b472; }
+    #status.ok  { color: var(--verde); }
+    #status.err { color: var(--rojo); }
+    #status.warn { color: var(--ocre); }
     .spinner {
-      width: 12px; height: 12px; flex-shrink: 0;
+      width:11px; height:11px; flex-shrink:0;
       border: 2px solid var(--border);
-      border-top-color: var(--gold);
+      border-top-color: var(--verde);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin .7s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin{ to{transform:rotate(360deg)} }
 
-    /* PRED TABLE */
-    .pred-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; display: none; margin-bottom: 12px; }
-    .pred-head { padding: 13px 16px; border-bottom: 1px solid var(--border); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); }
-    table { width: 100%; border-collapse: collapse; }
-    th { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); padding: 8px 16px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    td { padding: 10px 16px; font-size: 0.78rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: var(--surface2); }
-    .delta-up   { color: var(--red); }
-    .delta-down { color: var(--green); }
-    .delta-neu  { color: var(--text-dim); }
+    /* ── PREDICCIÓN TABLE ── */
+    .pred-table { width:100%; border-collapse:collapse; }
+    .pred-table th {
+      font-size: 0.58rem; text-transform:uppercase; letter-spacing:.06em;
+      color: var(--text-dim); padding: 8px 16px; text-align:left;
+      border-bottom: 1px solid var(--border);
+    }
+    .pred-table td { padding: 9px 16px; font-size:0.78rem; border-bottom:1px solid var(--border); }
+    .pred-table tr:last-child td { border-bottom:none; }
+    .pred-table tr:hover td { background: var(--surface2); }
+    .delta-pos { color: var(--rojo); }
+    .delta-neg { color: var(--verde); }
+    .delta-neu { color: var(--text-dim); }
 
-    /* ACTIONS */
-    .action-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
-    .btn {
+    /* ── PANEL LATERAL ── */
+    .side-col { display:flex; flex-direction:column; gap:14px; }
+
+    /* ── CLIMA ── */
+    .clima-row {
+      display:flex; flex-direction:column; gap:0;
+    }
+    .clima-dia {
+      padding: 9px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.72rem;
+    }
+    .clima-dia:last-child { border-bottom:none; }
+    .clima-fecha { color: var(--text-dim); font-size:0.62rem; }
+    .clima-lluvia { color: #2176ae; font-weight:600; }
+    .clima-temp { color: var(--text-dim); font-size:0.65rem; }
+
+    /* ── ENTRADA MANUAL ── */
+    .input-group { padding: 14px 16px; display:flex; flex-direction:column; gap:10px; }
+    .field { display:flex; flex-direction:column; gap:4px; }
+    .field label { font-size:0.62rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-dim); }
+    .field input {
       font-family: var(--mono);
-      font-size: 0.68rem;
-      padding: 7px 14px;
-      border-radius: 6px;
+      font-size: 0.85rem;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--bg);
+      color: var(--text);
+      width: 100%;
+      transition: border-color .2s;
+    }
+    .field input:focus { outline:none; border-color: var(--verde2); }
+    .field .hint { font-size:0.58rem; color:var(--text-dim); }
+    .btn-aplicar {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 9px 16px;
+      background: var(--verde);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background .2s;
+      width: 100%;
+    }
+    .btn-aplicar:hover { background: #1f4d38; }
+
+    /* ── ABASTECIMIENTO ── */
+    .abs-value { padding: 14px 16px; }
+    .abs-num { font-family: var(--serif); font-size:1.4rem; font-weight:700; color:var(--verde); }
+    .abs-label { font-size:0.62rem; color:var(--text-dim); margin-top:3px; }
+    .abs-mes { font-size:0.65rem; color:var(--text-dim); }
+
+    /* ── BOTONES ── */
+    .action-row { display:flex; justify-content:flex-end; gap:8px; margin-top:4px; }
+    .btn {
+      font-family:var(--mono); font-size:0.65rem;
+      padding: 6px 12px; border-radius:5px;
       border: 1px solid var(--border);
       background: var(--surface2);
-      color: var(--text);
-      cursor: pointer;
-      transition: border-color 0.2s, color 0.2s;
-      white-space: nowrap;
+      color: var(--text-dim);
+      cursor:pointer; transition: border-color .2s, color .2s;
     }
-    .btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn:hover:not(:disabled) { border-color:var(--verde); color:var(--verde); }
+    .btn:disabled { opacity:.4; cursor:not-allowed; }
 
-    /* SKELETON */
+    /* ── SKELETON ── */
     .sk {
-      background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
-      background-size: 200% 100%;
-      animation: sk 1.6s infinite;
-      border-radius: 4px;
+      background: linear-gradient(90deg, var(--surface2) 25%, #e8ede3 50%, var(--surface2) 75%);
+      background-size:200% 100%;
+      animation: sk 1.5s infinite;
+      border-radius:4px;
     }
-    @keyframes sk { to { background-position: -200% 0; } }
+    @keyframes sk{ to{background-position:-200% 0} }
 
-    .note { font-size: 0.62rem; color: var(--text-dim); text-align: center; margin-top: 24px; line-height: 2; }
-    .note a { color: var(--gold-dim); text-decoration: none; }
-    .note a:hover { color: var(--gold); }
+    /* ── NOTA ── */
+    .note { font-size:.6rem; color:var(--text-dim); text-align:center; margin-top:24px; line-height:2; }
+    .note a { color:var(--verde); text-decoration:none; }
+    .tag-modelo {
+      display:inline-block; font-size:.55rem; padding:2px 6px;
+      background:var(--surface2); border:1px solid var(--border);
+      border-radius:10px; color:var(--text-dim); vertical-align:middle;
+    }
   </style>
 </head>
 <body>
+
+<header>
+  <div class="logo">🥔</div>
+  <div class="header-text">
+    <h1>Precio Papa Colombia</h1>
+    <p>Datos oficiales SIPSA · DANE</p>
+  </div>
+  <div class="header-badge">
+    Fuente oficial<br>DANE · SIPSA<br>
+    <span id="dotLive">● En vivo</span>
+  </div>
+</header>
+
 <div class="wrap">
 
-  <header>
-    <div class="header-left">
-      <h1>Precio Papa<br>Colombia</h1>
-      <p>Histórico + Predicción 7 días</p>
-    </div>
-    <div class="header-badge">
-      <span class="dot-live" id="dotLive"></span><span id="dotLabel">En vivo</span><br>
-      Fuente: DANE · SIPSA<br>
-      Actualización diaria
-    </div>
-  </header>
-
-  <!-- Banner de advertencia / error -->
   <div id="banner"></div>
 
   <!-- KPI CARDS -->
   <div class="kpi-grid">
-    <div class="kpi gold" id="kpiHoy">
+    <div class="kpi verde" id="kpiHoy">
       <div class="kpi-label">Precio hoy</div>
-      <div class="kpi-value sk" style="height:28px;width:80%;">&nbsp;</div>
+      <div class="kpi-value sk" style="height:26px;width:85%;">&nbsp;</div>
       <div class="kpi-sub">promedio nacional</div>
     </div>
     <div class="kpi" id="kpiManana">
       <div class="kpi-label">Mañana (est.)</div>
-      <div class="kpi-value sk" style="height:28px;width:80%;">&nbsp;</div>
-      <div class="kpi-sub">variación vs hoy</div>
+      <div class="kpi-value sk" style="height:26px;width:85%;">&nbsp;</div>
+      <div class="kpi-sub">—</div>
     </div>
     <div class="kpi" id="kpiTend">
       <div class="kpi-label">Tendencia 7d</div>
-      <div class="kpi-value sk" style="height:28px;width:60%;">&nbsp;</div>
-      <div class="kpi-sub">cambio esperado</div>
+      <div class="kpi-value sk" style="height:26px;width:60%;">&nbsp;</div>
+      <div class="kpi-sub">—</div>
     </div>
-    <div class="kpi" id="kpiDias">
-      <div class="kpi-label">Días de datos</div>
-      <div class="kpi-value sk" style="height:28px;width:50%;">&nbsp;</div>
-      <div class="kpi-sub">registros SIPSA</div>
+    <div class="kpi" id="kpiModelo">
+      <div class="kpi-label">Modelo</div>
+      <div class="kpi-value sk" style="height:26px;width:60%;">&nbsp;</div>
+      <div class="kpi-sub">variables activas</div>
     </div>
   </div>
 
-  <!-- GRÁFICA -->
-  <div class="chart-box">
-    <div class="chart-topbar">
-      <span class="chart-topbar-title">Precio promedio nacional ($/kg)</span>
-      <div class="legend-row">
-        <span class="legend-item"><span class="legend-line" style="background:var(--green);"></span>Histórico</span>
-        <span class="legend-item"><span class="legend-line dotted"></span>Predicción</span>
+  <div class="main-grid">
+
+    <!-- COLUMNA PRINCIPAL -->
+    <div>
+      <!-- GRÁFICA -->
+      <div class="panel">
+        <div class="panel-head">
+          <span class="dot"></span>
+          Histórico + Predicción 7 días
+          <span id="tagModelo" class="tag-modelo" style="margin-left:auto;"></span>
+        </div>
+        <div id="chart"></div>
+        <div id="status"><div class="spinner"></div> Consultando SIPSA del DANE…</div>
+      </div>
+
+      <!-- TABLA PREDICCIÓN -->
+      <div class="panel" id="predPanel" style="display:none;">
+        <div class="panel-head">📅 Predicción detallada — próximos 7 días</div>
+        <table class="pred-table">
+          <thead><tr><th>Día</th><th>Fecha</th><th>Precio est.</th><th>Δ hoy</th></tr></thead>
+          <tbody id="predBody"></tbody>
+        </table>
+      </div>
+
+      <div class="action-row">
+        <button class="btn" id="btnRecargar">↺ Recargar</button>
+        <button class="btn" id="btnCsv" disabled>↓ CSV</button>
       </div>
     </div>
-    <div id="chart"></div>
-    <div id="status"><div class="spinner"></div> Consultando SIPSA del DANE…</div>
-  </div>
 
-  <!-- PREDICCIÓN TABLE -->
-  <div class="pred-box" id="predBox">
-    <div class="pred-head">📅 Predicción — próximos 7 días</div>
-    <table>
-      <thead><tr><th>Día</th><th>Fecha</th><th>Precio est. ($/kg)</th><th>Δ vs hoy</th></tr></thead>
-      <tbody id="predBody"></tbody>
-    </table>
-  </div>
+    <!-- COLUMNA LATERAL -->
+    <div class="side-col">
 
-  <div class="action-row">
-    <button class="btn" id="btnRecargar">↺ Recargar</button>
-    <button class="btn" id="btnCsv" disabled>↓ CSV</button>
+      <!-- CLIMA PRONÓSTICO -->
+      <div class="panel" id="climaPanel" style="display:none;">
+        <div class="panel-head">🌧 Clima Ipiales — 7 días</div>
+        <div class="clima-row" id="climaBody"></div>
+      </div>
+
+      <!-- ENTRADA MANUAL -->
+      <div class="panel">
+        <div class="panel-head">⚙ Variables locales</div>
+        <div class="input-group">
+          <div class="field">
+            <label>ACPM Pasto ($/galón)</label>
+            <input type="number" id="inputAcpm" value="11282" min="5000" max="30000" step="100">
+            <span class="hint">Fuente: CREG · actualizar mensualmente</span>
+          </div>
+          <div class="field">
+            <label>Precio frontera Ipiales ($/kg)</label>
+            <input type="number" id="inputFrontera" value="0" min="0" max="10000" step="50">
+            <span class="hint">Plaza de mercado local · 0 = sin dato</span>
+          </div>
+          <button class="btn-aplicar" id="btnAplicar">Aplicar y recalcular</button>
+        </div>
+      </div>
+
+      <!-- ABASTECIMIENTO -->
+      <div class="panel" id="absPanel" style="display:none;">
+        <div class="panel-head">📦 Abastecimiento nacional</div>
+        <div class="abs-value">
+          <div class="abs-num" id="absNum">—</div>
+          <div class="abs-label">toneladas de papa</div>
+          <div class="abs-mes" id="absMes">—</div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <p class="note">
     Datos: <a href="https://www.dane.gov.co/index.php/estadisticas-por-tema/agropecuario/sistema-de-informacion-de-precios-sipsa" target="_blank">DANE – SIPSA</a>
-    · Modelo: media móvil 30d + regresión lineal
-    · <a href="https://ingenio.plus" target="_blank">Sena - Ipiales</a>
+    · Clima: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a>
+    · Modelo multivariado con rezagos · v2.0
   </p>
+
 </div>
 
 <script>
+// ─── Config ───────────────────────────────────────────────────────────────────
 const API = '/api/sipsa';
 const $ = id => document.getElementById(id);
-const fmt = n => new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n);
+
+const fmt  = n => new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n);
 const fmtF = f => {
-  const [y,m,d] = f.split('-');
   const dow = new Date(f+'T12:00:00Z').getUTCDay();
-  return `${'dom lun mar mié jue vie sáb'.split(' ')[dow]} ${d}/${m}`;
+  const [y,mo,d] = f.split('-');
+  return `${'dom lun mar mié jue vie sáb'.split(' ')[dow]} ${d}/${mo}`;
 };
 const signo = v => v > 0 ? '+' : '';
+
 let _datos = null;
+let _acpm = 11282;
+let _frontera = 0;
 
-function mostrarBanner(tipo, msg) {
-  const b = $('banner');
-  b.className = tipo; // 'warn' o 'err'
-  b.textContent = msg;
-  b.style.display = 'block';
-  // Actualizar dot
-  $('dotLive').className = `dot-live ${tipo}`;
-  $('dotLabel').textContent = tipo === 'warn' ? 'Datos en caché' : 'Sin conexión';
-}
-function ocultarBanner() {
-  $('banner').style.display = 'none';
-  $('dotLive').className = 'dot-live';
-  $('dotLabel').textContent = 'En vivo';
-}
-
-function renderKpis(historico, prediccion) {
+// ─── Render KPIs ─────────────────────────────────────────────────────────────
+function renderKpis(historico, prediccion, contexto) {
   const hoy = historico.at(-1).precio;
   const man = prediccion[0].precio;
   const fin = prediccion.at(-1).precio;
   const d1  = ((man-hoy)/hoy*100).toFixed(1);
   const d7  = ((fin-hoy)/hoy*100).toFixed(1);
+  const modelo = contexto?.modelo || 'simple';
 
-  $('kpiHoy').className = 'kpi gold visible';
-  $('kpiHoy').innerHTML = `<div class="kpi-label">Precio hoy</div><div class="kpi-value">${fmt(hoy)}</div><div class="kpi-sub">${fmtF(historico.at(-1).fecha)}</div>`;
+  $('kpiHoy').className = 'kpi verde visible';
+  $('kpiHoy').innerHTML = `<div class="kpi-label">Precio hoy</div>
+    <div class="kpi-value">${fmt(hoy)}</div>
+    <div class="kpi-sub">${fmtF(historico.at(-1).fecha)}</div>`;
 
-  $('kpiManana').className = `kpi ${parseFloat(d1)>0?'up':'down'} visible`;
-  $('kpiManana').innerHTML = `<div class="kpi-label">Mañana (est.)</div><div class="kpi-value">${fmt(man)}</div><div class="kpi-sub">${signo(d1)}${d1}% vs hoy</div>`;
+  const clsMan = parseFloat(d1)>0?'rojo':parseFloat(d1)<0?'verde':'ocre';
+  $('kpiManana').className = `kpi ${clsMan} visible`;
+  $('kpiManana').innerHTML = `<div class="kpi-label">Mañana (est.)</div>
+    <div class="kpi-value">${fmt(man)}</div>
+    <div class="kpi-sub">${signo(d1)}${d1}% vs hoy</div>`;
 
-  $('kpiTend').className = `kpi ${parseFloat(d7)>2?'up':parseFloat(d7)<-2?'down':'gold'} visible`;
-  $('kpiTend').innerHTML = `<div class="kpi-label">Tendencia 7d</div><div class="kpi-value">${signo(d7)}${d7}%</div><div class="kpi-sub">${parseFloat(d7)>0?'↑ al alza':'↓ a la baja'}</div>`;
+  const clsTend = parseFloat(d7)>2?'rojo':parseFloat(d7)<-2?'verde':'ocre';
+  $('kpiTend').className = `kpi ${clsTend} visible`;
+  $('kpiTend').innerHTML = `<div class="kpi-label">Tendencia 7d</div>
+    <div class="kpi-value">${signo(d7)}${d7}%</div>
+    <div class="kpi-sub">${parseFloat(d7)>0?'↑ al alza':'↓ a la baja'}</div>`;
 
-  $('kpiDias').className = 'kpi visible';
-  $('kpiDias').innerHTML = `<div class="kpi-label">Días de datos</div><div class="kpi-value">${historico.length}</div><div class="kpi-sub">registros SIPSA</div>`;
+  const varsActivas = [
+    'precio SIPSA',
+    contexto?.abastecimiento_ultimo ? 'abastecimiento' : null,
+    contexto?.clima_pronostico_ipiales?.length ? 'clima' : null,
+    contexto?.acpm_gallon > 0 ? 'ACPM' : null,
+    contexto?.precio_frontera > 0 ? 'frontera' : null,
+  ].filter(Boolean);
+
+  $('kpiModelo').className = 'kpi visible';
+  $('kpiModelo').innerHTML = `<div class="kpi-label">Modelo</div>
+    <div class="kpi-value" style="font-size:1rem">${modelo}</div>
+    <div class="kpi-sub">${varsActivas.length} variables</div>`;
+
+  $('tagModelo').textContent = modelo === 'multivariado' ? '🔬 multivariado' : '📈 tendencia';
 }
 
+// ─── Render Chart ─────────────────────────────────────────────────────────────
 function renderChart(historico, prediccion) {
   Plotly.newPlot('chart', [
     {
       x: historico.map(d=>d.fecha), y: historico.map(d=>d.precio),
       type:'scatter', mode:'lines', name:'Real',
-      line:{color:'#4e8c5f',width:2},
+      line:{color:'#2d6a4f', width:2},
       hovertemplate:'%{x}<br><b>%{y:,.0f} $/kg</b><extra></extra>',
     },
     {
       x:[historico.at(-1).fecha,...prediccion.map(d=>d.fecha)],
       y:[historico.at(-1).precio,...prediccion.map(d=>d.precio)],
       type:'scatter', mode:'lines+markers', name:'Predicción',
-      line:{color:'#d4942a',width:2,dash:'dot'},
-      marker:{size:5,color:'#d4942a'},
+      line:{color:'#c77b2e', width:2, dash:'dot'},
+      marker:{size:5, color:'#c77b2e'},
       hovertemplate:'%{x}<br><b>~%{y:,.0f} $/kg</b><extra>est.</extra>',
     }
   ], {
-    margin:{t:8,l:60,r:14,b:44},
-    paper_bgcolor:'transparent', plot_bgcolor:'#231810',
-    font:{family:'Inconsolata,monospace',size:11,color:'#8a7060'},
-    xaxis:{gridcolor:'#2e1f13',showline:false,tickformat:'%b %y',tickfont:{size:10}},
-    yaxis:{gridcolor:'#2e1f13',showline:false,tickformat:',.0f',tickprefix:'$'},
+    margin:{t:8,l:62,r:12,b:44},
+    paper_bgcolor:'transparent', plot_bgcolor:'#f8faf5',
+    font:{family:'IBM Plex Mono,monospace', size:10, color:'#6b7d6e'},
+    xaxis:{gridcolor:'#e2e8dc', showline:false, tickformat:'%b %y'},
+    yaxis:{gridcolor:'#e2e8dc', showline:false, tickformat:',.0f', tickprefix:'$'},
     hovermode:'x unified',
-    hoverlabel:{bgcolor:'#2e1f13',bordercolor:'#3d2a1a',font:{family:'Inconsolata',color:'#e8ddd0'}},
+    hoverlabel:{bgcolor:'#fff', bordercolor:'#d4dace', font:{family:'IBM Plex Mono', color:'#1c2b1e'}},
     showlegend:false,
-    shapes:[{type:'line',x0:historico.at(-1).fecha,x1:historico.at(-1).fecha,y0:0,y1:1,yref:'paper',line:{color:'#3d2a1a',width:1.5,dash:'dot'}}],
-  }, {responsive:true,displayModeBar:false});
+    shapes:[{type:'line', x0:historico.at(-1).fecha, x1:historico.at(-1).fecha,
+      y0:0, y1:1, yref:'paper', line:{color:'#d4dace', width:1, dash:'dot'}}],
+  }, {responsive:true, displayModeBar:false});
 }
 
+// ─── Render Tabla Predicción ──────────────────────────────────────────────────
 function renderTabla(historico, prediccion) {
-  const hoy  = historico.at(-1).precio;
+  const hoy = historico.at(-1).precio;
   const dias = ['Mañana','Pasado mañana','En 3 días','En 4 días','En 5 días','En 6 días','En 7 días'];
   $('predBody').innerHTML = prediccion.map((d,i) => {
     const pct = ((d.precio-hoy)/hoy*100).toFixed(1);
-    const cls = parseFloat(pct)>1?'delta-up':parseFloat(pct)<-1?'delta-down':'delta-neu';
-    return `<tr>
+    const cls = parseFloat(pct)>1?'delta-pos':parseFloat(pct)<-1?'delta-neg':'delta-neu';
+    const comp = d.componentes;
+    const title = comp ? `Tendencia: ${fmt(comp.tendencia)} | Lluvia: ${fmt(comp.lluvia)} | Abast.: ${fmt(comp.abastecimiento)} | ACPM: ${fmt(comp.acpm)}` : '';
+    return `<tr title="${title}">
       <td>${dias[i]}</td>
-      <td style="color:var(--text-dim);font-size:0.7rem;">${fmtF(d.fecha)}</td>
-      <td style="font-weight:700;color:var(--gold);">${fmt(d.precio)}</td>
-      <td class="${cls}">${signo(pct)}${pct}%</td>
+      <td style="color:var(--text-dim);font-size:.68rem">${fmtF(d.fecha)}</td>
+      <td style="font-weight:600;color:var(--ocre)">${fmt(d.precio)}</td>
+      <td class="${cls}" style="font-size:.7rem">${signo(pct)}${pct}%</td>
     </tr>`;
   }).join('');
-  $('predBox').style.display = '';
+  $('predPanel').style.display = '';
 }
 
+// ─── Render Clima ─────────────────────────────────────────────────────────────
+function renderClima(pronostico) {
+  if (!pronostico?.length) return;
+  const iconos = { 0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',61:'🌧',63:'🌧',80:'🌦',95:'⛈' };
+  const icono = p => {
+    const wc = p.weathercode || 0;
+    return iconos[wc] || (p.lluvia_mm > 5 ? '🌧' : p.lluvia_mm > 0 ? '🌦' : '☀️');
+  };
+  $('climaBody').innerHTML = pronostico.slice(0,7).map(d =>
+    `<div class="clima-dia">
+      <div>
+        <div style="font-size:.7rem">${icono(d)} ${fmtF(d.fecha)}</div>
+        <div class="clima-temp">${d.temp_min}° – ${d.temp_max}°C</div>
+      </div>
+      <div style="text-align:right">
+        <div class="clima-lluvia">${d.lluvia_mm} mm</div>
+        <div class="clima-temp">${d.prob_lluvia}% prob.</div>
+      </div>
+    </div>`
+  ).join('');
+  $('climaPanel').style.display = '';
+}
+
+// ─── Render Abastecimiento ────────────────────────────────────────────────────
+function renderAbastecimiento(abs) {
+  if (!abs) return;
+  $('absNum').textContent = new Intl.NumberFormat('es-CO').format(abs.toneladas);
+  $('absMes').textContent = `Mes: ${abs.mes}`;
+  $('absPanel').style.display = '';
+}
+
+// ─── Banner ───────────────────────────────────────────────────────────────────
+function mostrarBanner(tipo, msg) {
+  const b = $('banner');
+  b.className = tipo; b.textContent = msg; b.style.display = 'block';
+  $('dotLive').textContent = tipo === 'warn' ? '● Caché' : '● Error';
+  $('dotLive').style.color = tipo === 'warn' ? '#c77b2e' : '#b5363a';
+}
+function ocultarBanner() {
+  $('banner').style.display = 'none';
+  $('dotLive').textContent = '● En vivo';
+  $('dotLive').style.color = '';
+}
+
+// ─── CSV ──────────────────────────────────────────────────────────────────────
 $('btnCsv').addEventListener('click', () => {
   if (!_datos) return;
-  const {historico,prediccion} = _datos;
+  const {historico, prediccion} = _datos;
   let csv = 'tipo,fecha,precio_cop_kg\n';
   historico.forEach(d  => csv += `real,${d.fecha},${d.precio}\n`);
   prediccion.forEach(d => csv += `prediccion,${d.fecha},${d.precio}\n`);
@@ -404,57 +564,74 @@ $('btnCsv').addEventListener('click', () => {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
 
-async function cargar() {
+// ─── Carga ────────────────────────────────────────────────────────────────────
+async function cargar(force = false) {
   const st = $('status');
   st.className = '';
   st.innerHTML = '<div class="spinner"></div> Consultando SIPSA del DANE…';
   $('btnCsv').disabled = true;
-  $('predBox').style.display = 'none';
+  $('predPanel').style.display = 'none';
+  $('climaPanel').style.display = 'none';
+  $('absPanel').style.display = 'none';
   ocultarBanner();
 
+  const params = new URLSearchParams({ acpm: _acpm, frontera: _frontera });
+  if (force) params.set('refresh', '1');
+
   try {
-    const r = await fetch(API);
+    const r = await fetch(`${API}?${params}`);
     const data = await r.json();
 
     if (!r.ok || !data.ok) {
-      // Error total — mostrar mensaje con sugerencia
       mostrarBanner('err', `⚠ ${data.error || 'Error desconocido'}. ${data.sugerencia || ''}`);
       st.className = 'err';
-      st.innerHTML = `✗ No fue posible obtener datos del DANE`;
+      st.innerHTML = '✗ No fue posible obtener datos del DANE';
       return;
     }
 
-    const {historico, prediccion} = data;
+    const {historico, prediccion, contexto} = data;
     _datos = {historico, prediccion};
 
-    renderKpis(historico, prediccion);
+    renderKpis(historico, prediccion, contexto);
     renderChart(historico, prediccion);
     renderTabla(historico, prediccion);
+    renderClima(contexto?.clima_pronostico_ipiales);
+    renderAbastecimiento(contexto?.abastecimiento_ultimo);
     $('btnCsv').disabled = false;
 
-    // Advertencia si los datos vienen de caché vencida
     if (data.cacheVencida) {
-      mostrarBanner('warn', `⚠ ${data.advertencia} — ${data.sugerencia||'Intente más tarde.'}`);
+      mostrarBanner('warn', `⚠ ${data.advertencia}`);
       st.className = 'warn';
       st.innerHTML = `⚠ Datos en caché (${data.cacheAge} min) · DANE no disponible`;
     } else if (data.fromCache) {
       st.className = 'ok';
-      st.innerHTML = `✓ ${historico.length} días · desde caché (${data.cacheAge} min) · último dato: ${fmtF(historico.at(-1).fecha)}`;
+      st.innerHTML = `✓ ${historico.length} días · caché ${data.cacheAge} min · último: ${fmtF(historico.at(-1).fecha)}`;
     } else {
       st.className = 'ok';
-      st.innerHTML = `✓ ${historico.length} días · datos frescos · último: ${fmtF(historico.at(-1).fecha)} · ${new Date(data.generado).toLocaleTimeString('es-CO')}`;
+      st.innerHTML = `✓ ${historico.length} días · último: ${fmtF(historico.at(-1).fecha)} · ${new Date(data.generado).toLocaleTimeString('es-CO')}`;
     }
 
   } catch (err) {
-    // Error de red (Vercel caído, sin internet, etc.)
-    mostrarBanner('err', '⚠ No se pudo conectar con el servidor. Verifique su conexión a internet.');
+    mostrarBanner('err', '⚠ Error de conexión con el servidor.');
     st.className = 'err';
-    st.innerHTML = `✗ Error de conexión: ${err.message}`;
-    console.error(err);
+    st.innerHTML = `✗ ${err.message}`;
   }
 }
 
-$('btnRecargar').addEventListener('click', cargar);
+// ─── Eventos ──────────────────────────────────────────────────────────────────
+$('btnRecargar').addEventListener('click', () => cargar(true));
+
+$('btnAplicar').addEventListener('click', () => {
+  _acpm     = parseFloat($('inputAcpm').value)     || 11282;
+  _frontera = parseFloat($('inputFrontera').value) || 0;
+  cargar(true);
+});
+
+// Permitir Enter en los inputs
+['inputAcpm','inputFrontera'].forEach(id => {
+  $(id).addEventListener('keydown', e => { if(e.key==='Enter') $('btnAplicar').click(); });
+});
+
 cargar();
 </script>
 </body>
