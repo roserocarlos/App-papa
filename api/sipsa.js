@@ -136,60 +136,70 @@ async function fetchClima(lat, lon) {
 }
 
 // ─── Modelo multivariado con rezagos ──────────────────────────────────────────
-// Ancla: media móvil 30d + tendencia lineal (probado y estable)
-// Ajustes contextuales pequeños: lluvia, abastecimiento, ACPM, estacionalidad
-// Cada ajuste está LIMITADO para no superar ±8% del precio base
-function modeloMultivariado(historico, climaIpiales, climaTuquertes, abastecimiento, acpm) {
+// Tendencia: media ponderada exponencial (más peso a días recientes)
+//            + pendiente amortiguada que se reduce con la distancia
+// Ajustes contextuales: lluvia, abastecimiento, ACPM, estacionalidad
+// Sin clamp duro — la amortiguación de pendiente evita extrapolaciones extremas
+function modeloMultivariado(historico, climaIpiales, climaTuquerres, abastecimiento, acpm) {
   const n = historico.length;
-  if (n < 30) return modeloSimple(historico);
+  if (n < 15) return modeloSimple(historico);
 
   const precios = historico.slice(-30).map(d => d.precio);
-  const media   = precios.reduce((a,b) => a+b, 0) / precios.length;
-  const xMean   = (precios.length - 1) / 2;
-  let num = 0, den = 0;
-  precios.forEach((y, x) => { num += (x-xMean)*(y-media); den += (x-xMean)**2; });
-  const slope = den ? num / den : 0;
+  const m = precios.length;
 
-  // ── Señal lluvia: promedio últimos 7 días en Ipiales ─────────────────────
-  // Solo ajusta si lluvia es notablemente alta (>10mm/día promedio)
-  // Efecto: lluvia intensa → puede afectar cosecha → leve presión alcista
+  // ── Media ponderada exponencial (EMA) ────────────────────────────────────
+  // α=0.1: suaviza fuerte, más estable para predicción
+  const alpha = 0.1;
+  let ema = precios[0];
+  for (let i = 1; i < m; i++) ema = alpha * precios[i] + (1 - alpha) * ema;
+
+  // ── Pendiente lineal sobre últimos 14 días (más reciente, más relevante) ─
+  const recientes = precios.slice(-14);
+  const nr = recientes.length;
+  const mediaR = recientes.reduce((a,b) => a+b, 0) / nr;
+  const xMeanR = (nr - 1) / 2;
+  let numR = 0, denR = 0;
+  recientes.forEach((y, x) => { numR += (x-xMeanR)*(y-mediaR); denR += (x-xMeanR)**2; });
+  const slopeRaw = denR ? numR / denR : 0;
+
+  // Amortiguación: la pendiente se reduce a la mitad en 7 días
+  // Evita que tendencias recientes fuertes se extrapolen indefinidamente
+  const amortiguacion = (i) => Math.exp(-0.1 * i); // decae ~63% en 10 días
+
+  // ── Señal lluvia Ipiales: últimos 7 días ─────────────────────────────────
   const lluviaIp = climaIpiales.historico.slice(-7).map(d => d.lluvia_mm);
   const lluviaMedia7 = lluviaIp.length
-    ? lluviaIp.reduce((a,b)=>a+b,0) / lluviaIp.length
-    : 0;
-  // Ajuste máximo ±5% del precio base, solo si lluvia > 10mm/día
+    ? lluviaIp.reduce((a,b)=>a+b,0) / lluviaIp.length : 0;
+  // >10mm/día promedio = lluvia notable → leve presión alcista futura
   const señalLluvia = lluviaMedia7 > 10
-    ? Math.min((lluviaMedia7 - 10) / 10, 1) * 0.05  // +0 a +5%
-    : 0;
+    ? Math.min((lluviaMedia7 - 10) / 20, 1) * 0.04 : 0; // máx +4%
 
   // ── Señal abastecimiento ─────────────────────────────────────────────────
-  // Comparar último mes vs promedio histórico de los datos disponibles
-  // Ajuste máximo ±6%
   let señalAbs = 0;
   if (abastecimiento.length >= 3) {
-    const tonHist = abastecimiento.map(d => d.toneladas);
-    const mediaAbs = tonHist.slice(0, -1).reduce((a,b) => a+b, 0) / (tonHist.length - 1);
-    const ultTon   = tonHist.at(-1);
+    const tons = abastecimiento.map(d => d.toneladas);
+    const mediaAbs = tons.slice(0, -1).reduce((a,b) => a+b, 0) / (tons.length - 1);
+    const ultTon   = tons.at(-1);
     if (mediaAbs > 0) {
-      const ratio = (ultTon - mediaAbs) / mediaAbs; // positivo = más oferta
-      señalAbs = Math.max(-0.06, Math.min(0.06, -ratio * 0.3)); // inverso, limitado ±6%
+      const ratio = (ultTon - mediaAbs) / mediaAbs;
+      // Relación inversa limitada: más oferta → precio baja, máx ±5%
+      señalAbs = Math.max(-0.05, Math.min(0.05, -ratio * 0.25));
     }
   }
 
   // ── Señal ACPM ───────────────────────────────────────────────────────────
-  // Base: ~$11.000/galón Pasto. Ajuste máximo ±3%
-  const refAcpm  = 11000;
+  const refAcpm = 11000;
   const señalAcpm = acpm > 0
-    ? Math.max(-0.03, Math.min(0.03, (acpm - refAcpm) / refAcpm * 0.5))
-    : 0;
+    ? Math.max(-0.025, Math.min(0.025, (acpm - refAcpm) / refAcpm * 0.4)) : 0;
 
-  // ── Señal estacional ─────────────────────────────────────────────────────
-  // Semestre 1 (ene-jun): precios históricam. más altos en Colombia
-  // Ajuste ±4% según semana del año
+  // ── Estacionalidad ───────────────────────────────────────────────────────
   const fechaUlt = new Date(historico.at(-1).fecha + 'T12:00:00Z');
-  const semanaBase = Math.ceil((fechaUlt - new Date(fechaUlt.getUTCFullYear(), 0, 1)) / (7*24*3600*1000));
-  const factorEst  = Math.sin(2 * Math.PI * (semanaBase - 13) / 52); // pico en semana 13 (abril)
-  const señalEst   = factorEst * 0.04; // ±4%
+  const semanaBase = Math.ceil(
+    (fechaUlt - new Date(Date.UTC(fechaUlt.getUTCFullYear(), 0, 1))) / (7*24*3600*1000)
+  );
+  // Semana 13 (abril) = pico S1, semana 39 (sept) = valle S2
+  const factorEst = Math.sin(2 * Math.PI * (semanaBase - 13) / 52);
+  const señalEst  = factorEst * 0.03; // ±3%
 
   // ── Predicción 7 días ────────────────────────────────────────────────────
   const base = new Date(fechaUlt);
@@ -197,22 +207,21 @@ function modeloMultivariado(historico, climaIpiales, climaTuquertes, abastecimie
     const d = new Date(base);
     d.setUTCDate(d.getUTCDate() + i + 1);
 
-    const tendencia    = media + slope * (precios.length + i);
-    // Ajustes como fracción del precio tendencia — nunca colapsan el precio
-    const ajLluvia     = tendencia * señalLluvia;
-    const ajAbs        = tendencia * señalAbs;
-    const ajAcpm       = tendencia * señalAcpm;
-    const ajEst        = tendencia * señalEst * (i / 6); // crece gradualmente
+    // Tendencia: EMA + pendiente amortiguada
+    const slopeAmort  = slopeRaw * amortiguacion(i);
+    const tendencia   = ema + slopeAmort * (i + 1);
 
-    const precioEst = tendencia + ajLluvia + ajAbs + ajAcpm + ajEst;
+    // Ajustes contextuales como fracción de la tendencia
+    const ajLluvia    = tendencia * señalLluvia;
+    const ajAbs       = tendencia * señalAbs;
+    const ajAcpm      = tendencia * señalAcpm;
+    const ajEst       = tendencia * señalEst;
 
-    // Límite de variación: predicción no puede alejarse >15% del último precio real
-    const precioHoy   = historico.at(-1).precio;
-    const precioClamp = Math.max(precioHoy * 0.85, Math.min(precioHoy * 1.15, precioEst));
+    const precioEst   = tendencia + ajLluvia + ajAbs + ajAcpm + ajEst;
 
     return {
       fecha:  d.toISOString().split('T')[0],
-      precio: Math.round(Math.max(precioClamp, 500)),
+      precio: Math.round(Math.max(precioEst, 500)),
       componentes: {
         tendencia:      Math.round(tendencia),
         lluvia:         Math.round(ajLluvia),
