@@ -1,0 +1,581 @@
+!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1a120b">
+  <title>Precio Papa · Colombia SIPSA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inconsolata:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────── */
+    :root {
+      --bg:        #1a120b;
+      --surface:   #231810;
+      --surface2:  #2e1f13;
+      --border:    #3d2a1a;
+      --gold:      #d4942a;
+      --gold-dim:  #7a5218;
+      --green:     #4e8c5f;
+      --green-dim: #2a4e33;
+      --red:       #b84040;
+      --text:      #e8ddd0;
+      --text-dim:  #8a7060;
+      --mono:      'Inconsolata', monospace;
+      --serif:     'Playfair Display', Georgia, serif;
+    }
+
+    /* ── RESET ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--mono);
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── GRAIN OVERLAY ───────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.35;
+    }
+
+    /* ── LAYOUT ──────────────────────────────────────────── */
+    .wrap {
+      position: relative; z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 16px 56px;
+    }
+
+    /* ── HEADER ──────────────────────────────────────────── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0 18px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .header-left h1 {
+      font-family: var(--serif);
+      font-size: clamp(1.4rem, 6vw, 2rem);
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+    .header-left p {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .header-badge {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      text-align: right;
+      line-height: 1.7;
+      flex-shrink: 0;
+    }
+    .dot-live {
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 4px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ── KPI GRID ─────────────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+    @media (min-width: 540px) {
+      .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 14px 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .kpi.visible { opacity: 1; transform: none; }
+    .kpi-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-family: var(--serif);
+      font-size: clamp(1.3rem, 4vw, 1.7rem);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+    .kpi-sub {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      margin-top: 5px;
+    }
+    .kpi.up   .kpi-value { color: var(--red); }
+    .kpi.down .kpi-value { color: var(--green); }
+    .kpi.gold .kpi-value { color: var(--gold); }
+
+    /* ── CHART ───────────────────────────────────────────── */
+    .chart-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .chart-topbar {
+      padding: 14px 16px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chart-topbar-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .legend-row {
+      display: flex;
+      gap: 14px;
+    }
+    .legend-item {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-line {
+      display: inline-block;
+      width: 18px; height: 2px;
+      border-radius: 1px;
+    }
+    .legend-line.dotted {
+      background: repeating-linear-gradient(90deg, var(--gold) 0 4px, transparent 4px 7px);
+    }
+    #chart { width: 100%; height: 360px; }
+    @media (max-width: 480px) { #chart { height: 280px; } }
+
+    /* ── STATUS ──────────────────────────────────────────── */
+    #status {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+    }
+    #status.err { color: var(--red); }
+    #status.ok  { color: var(--green); }
+    .spinner {
+      width: 12px; height: 12px; flex-shrink: 0;
+      border: 2px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── PRED TABLE ──────────────────────────────────────── */
+    .pred-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: none;
+      margin-bottom: 12px;
+    }
+    .pred-head {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      font-size: 0.58rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      padding: 8px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 16px;
+      font-size: 0.78rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+    .td-precio { font-weight: 700; font-size: 0.88rem; }
+    .td-delta  { font-size: 0.72rem; }
+    .delta-up   { color: var(--red); }
+    .delta-down { color: var(--green); }
+    .delta-neu  { color: var(--text-dim); }
+
+    /* ── FOOTER ROW ──────────────────────────────────────── */
+    .action-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .btn {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 7px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── SKELETON ────────────────────────────────────────── */
+    .sk {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: sk 1.6s infinite;
+      border-radius: 4px;
+    }
+    @keyframes sk { to { background-position: -200% 0; } }
+
+    /* ── FUENTE NOTE ─────────────────────────────────────── */
+    .note {
+      font-size: 0.62rem;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 24px;
+      line-height: 2;
+    }
+    .note a { color: var(--gold-dim); text-decoration: none; }
+    .note a:hover { color: var(--gold); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <h1>Precio Papa<br>Colombia</h1>
+      <p>Histórico + Predicción 7 días</p>
+    </div>
+    <div class="header-badge">
+      <span class="dot-live"></span>Datos en vivo<br>
+      Fuente: DANE · SIPSA<br>
+      Actualización diaria
+    </div>
+  </header>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi gold" id="kpiHoy">
+      <div class="kpi-label">Precio hoy</div>
+      <div class="kpi-value sk" style="height:28px;width:80%;">&nbsp;</div>
+      <div class="kpi-sub">promedio nacional</div>
+    </div>
+    <div class="kpi" id="kpiManana">
+      <div class="kpi-label">Mañana (est.)</div>
+      <div class="kpi-value sk" style="height:28px;width:80%;">&nbsp;</div>
+      <div class="kpi-sub">variación vs hoy</div>
+    </div>
+    <div class="kpi" id="kpiTend">
+      <div class="kpi-label">Tendencia 7d</div>
+      <div class="kpi-value sk" style="height:28px;width:60%;">&nbsp;</div>
+      <div class="kpi-sub">cambio esperado</div>
+    </div>
+    <div class="kpi" id="kpiDias">
+      <div class="kpi-label">Días de datos</div>
+      <div class="kpi-value sk" style="height:28px;width:50%;">&nbsp;</div>
+      <div class="kpi-sub">registros SIPSA</div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="chart-box">
+    <div class="chart-topbar">
+      <span class="chart-topbar-title">Precio promedio nacional ($/kg)</span>
+      <div class="legend-row">
+        <span class="legend-item">
+          <span class="legend-line" style="background:var(--green);"></span>Histórico real
+        </span>
+        <span class="legend-item">
+          <span class="legend-line dotted"></span>Predicción
+        </span>
+      </div>
+    </div>
+    <div id="chart"></div>
+    <div id="status">
+      <div class="spinner"></div>
+      Consultando servicio SIPSA del DANE…
+    </div>
+  </div>
+
+  <!-- PREDICCIÓN TABLE -->
+  <div class="pred-box" id="predBox">
+    <div class="pred-head">📅 Predicción — próximos 7 días</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Día</th>
+          <th>Fecha</th>
+          <th>Precio est. ($/kg)</th>
+          <th>Δ vs hoy</th>
+        </tr>
+      </thead>
+      <tbody id="predBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="action-row">
+    <button class="btn" id="btnRecargar">↺ Recargar datos</button>
+    <button class="btn" id="btnCsv" disabled>↓ Descargar CSV</button>
+  </div>
+
+  <!-- NOTE -->
+  <p class="note">
+    Datos: <a href="https://www.dane.gov.co/index.php/estadisticas-por-tema/agropecuario/sistema-de-informacion-de-precios-sipsa" target="_blank">DANE – SIPSA</a>
+    · Modelo: media móvil 30d + regresión lineal
+    · <a href="https://ingenio.plus" target="_blank">Ingenio+</a>
+  </p>
+
+</div><!-- /wrap -->
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIG — la función Vercel vive en /api/sipsa (mismo dominio → sin CORS)
+// ─────────────────────────────────────────────────────────────────────────────
+const API = '/api/sipsa';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmt = n => new Intl.NumberFormat('es-CO', {
+  style: 'currency', currency: 'COP', maximumFractionDigits: 0
+}).format(n);
+const fmtFecha = f => {
+  const [y, m, d] = f.split('-');
+  const dias = ['dom','lun','mar','mié','jue','vie','sáb'];
+  const dow  = new Date(f + 'T12:00:00Z').getUTCDay();
+  return `${dias[dow]} ${d}/${m}`;
+};
+const signo = v => v > 0 ? '+' : '';
+
+let _datos = null;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KPI CARDS
+// ─────────────────────────────────────────────────────────────────────────────
+function renderKpis(historico, prediccion) {
+  const hoy  = historico.at(-1).precio;
+  const man  = prediccion[0].precio;
+  const fin  = prediccion.at(-1).precio;
+  const d1   = ((man - hoy) / hoy * 100).toFixed(1);
+  const d7   = ((fin - hoy) / hoy * 100).toFixed(1);
+
+  const cardHoy = $('kpiHoy');
+  cardHoy.className = 'kpi gold visible';
+  cardHoy.innerHTML = `
+    <div class="kpi-label">Precio hoy</div>
+    <div class="kpi-value">${fmt(hoy)}</div>
+    <div class="kpi-sub">${fmtFecha(historico.at(-1).fecha)}</div>`;
+
+  const cardMan = $('kpiManana');
+  cardMan.className = `kpi ${parseFloat(d1) > 0 ? 'up' : 'down'} visible`;
+  cardMan.innerHTML = `
+    <div class="kpi-label">Mañana (est.)</div>
+    <div class="kpi-value">${fmt(man)}</div>
+    <div class="kpi-sub">${signo(d1)}${d1}% vs hoy</div>`;
+
+  const cardTend = $('kpiTend');
+  cardTend.className = `kpi ${parseFloat(d7) > 2 ? 'up' : parseFloat(d7) < -2 ? 'down' : 'gold'} visible`;
+  cardTend.innerHTML = `
+    <div class="kpi-label">Tendencia 7d</div>
+    <div class="kpi-value">${signo(d7)}${d7}%</div>
+    <div class="kpi-sub">${parseFloat(d7) > 0 ? '↑ al alza' : '↓ a la baja'}</div>`;
+
+  const cardDias = $('kpiDias');
+  cardDias.className = 'kpi visible';
+  cardDias.innerHTML = `
+    <div class="kpi-label">Días de datos</div>
+    <div class="kpi-value">${historico.length}</div>
+    <div class="kpi-sub">registros SIPSA</div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GRÁFICA
+// ─────────────────────────────────────────────────────────────────────────────
+function renderChart(historico, prediccion) {
+  const trH = {
+    x: historico.map(d => d.fecha),
+    y: historico.map(d => d.precio),
+    type: 'scatter', mode: 'lines',
+    name: 'Real',
+    line: { color: '#4e8c5f', width: 2 },
+    hovertemplate: '%{x}<br><b>%{y:,.0f} $/kg</b><extra></extra>',
+  };
+  const trP = {
+    x: [historico.at(-1).fecha, ...prediccion.map(d => d.fecha)],
+    y: [historico.at(-1).precio, ...prediccion.map(d => d.precio)],
+    type: 'scatter', mode: 'lines+markers',
+    name: 'Predicción',
+    line: { color: '#d4942a', width: 2, dash: 'dot' },
+    marker: { size: 5, color: '#d4942a' },
+    hovertemplate: '%{x}<br><b>~%{y:,.0f} $/kg</b><extra>est.</extra>',
+  };
+
+  Plotly.newPlot('chart', [trH, trP], {
+    margin: { t: 8, l: 60, r: 14, b: 44 },
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: '#231810',
+    font: { family: 'Inconsolata, monospace', size: 11, color: '#8a7060' },
+    xaxis: {
+      gridcolor: '#2e1f13', showline: false, tickformat: '%b %y',
+      tickfont: { size: 10 },
+    },
+    yaxis: {
+      gridcolor: '#2e1f13', showline: false, tickformat: ',.0f',
+      tickprefix: '$',
+    },
+    hovermode: 'x unified',
+    hoverlabel: {
+      bgcolor: '#2e1f13', bordercolor: '#3d2a1a',
+      font: { family: 'Inconsolata', color: '#e8ddd0' },
+    },
+    showlegend: false,
+    shapes: [{
+      type: 'line',
+      x0: historico.at(-1).fecha, x1: historico.at(-1).fecha,
+      y0: 0, y1: 1, yref: 'paper',
+      line: { color: '#3d2a1a', width: 1.5, dash: 'dot' },
+    }],
+  }, { responsive: true, displayModeBar: false });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLA PREDICCIÓN
+// ─────────────────────────────────────────────────────────────────────────────
+function renderTabla(historico, prediccion) {
+  const hoy  = historico.at(-1).precio;
+  const dias = ['Mañana','Pasado mañana','En 3 días','En 4 días','En 5 días','En 6 días','En 7 días'];
+  const body = $('predBody');
+  body.innerHTML = '';
+  prediccion.forEach((d, i) => {
+    const pct  = ((d.precio - hoy) / hoy * 100).toFixed(1);
+    const cls  = parseFloat(pct) > 1 ? 'delta-up' : parseFloat(pct) < -1 ? 'delta-down' : 'delta-neu';
+    body.innerHTML += `<tr>
+      <td>${dias[i]}</td>
+      <td style="color:var(--text-dim);font-size:0.7rem;">${fmtFecha(d.fecha)}</td>
+      <td class="td-precio" style="color:var(--gold);">${fmt(d.precio)}</td>
+      <td class="td-delta ${cls}">${signo(pct)}${pct}%</td>
+    </tr>`;
+  });
+  $('predBox').style.display = '';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CSV
+// ─────────────────────────────────────────────────────────────────────────────
+$('btnCsv').addEventListener('click', () => {
+  if (!_datos) return;
+  const { historico, prediccion } = _datos;
+  let csv = 'tipo,fecha,precio_cop_kg\n';
+  historico.forEach(d  => csv += `real,${d.fecha},${d.precio}\n`);
+  prediccion.forEach(d => csv += `prediccion,${d.fecha},${d.precio}\n`);
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })),
+    download: `precios_papa_${new Date().toISOString().slice(0,10)}.csv`,
+  });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CARGA PRINCIPAL
+// ─────────────────────────────────────────────────────────────────────────────
+async function cargar() {
+  const st = $('status');
+  st.className = '';
+  st.innerHTML = '<div class="spinner"></div> Consultando servicio SIPSA del DANE…';
+  $('btnCsv').disabled = true;
+  $('predBox').style.display = 'none';
+
+  try {
+    const r = await fetch(API);
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+      throw new Error(e.error || `HTTP ${r.status}`);
+    }
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'Error desconocido');
+
+    const { historico, prediccion } = data;
+    _datos = { historico, prediccion };
+
+    renderKpis(historico, prediccion);
+    renderChart(historico, prediccion);
+    renderTabla(historico, prediccion);
+
+    $('btnCsv').disabled = false;
+    st.className = 'ok';
+    st.innerHTML = `✓ ${historico.length} días cargados · último dato: ${fmtFecha(historico.at(-1).fecha)} · generado ${new Date(data.generado).toLocaleTimeString('es-CO')}`;
+
+  } catch (err) {
+    st.className = 'err';
+    st.innerHTML = `✗ ${err.message}`;
+    console.error(err);
+  }
+}
+
+$('btnRecargar').addEventListener('click', cargar);
+cargar();
+</script>
+</body>
+</html>
