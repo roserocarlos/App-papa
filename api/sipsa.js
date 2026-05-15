@@ -1,5 +1,4 @@
-// api/sipsa.js - Modelo AR(1) adaptativo corregido
-// Basado en analisis estadistico real de serie SIPSA 1332 dias:
+// api/sipsa.js - Modelo AR(1) adaptativo basado en analisis estadistico real de serie SIPSA 1332 dias:
 // - Autocorrelacion lag1=0.946: alta persistencia
 // - CV=27%, reversion promedio 16.5 dias
 // - Alpha adaptativo por z-score, ajustes contextuales NO encadenados
