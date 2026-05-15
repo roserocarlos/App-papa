@@ -1,4 +1,5 @@
-// api/sipsa.js - Modelo AR(1) adaptativo basado en analisis estadistico real de serie SIPSA 1332 dias:
+// api/sipsa.js - Modelo AR(1) adaptativo corregido
+// Basado en analisis estadistico real de serie SIPSA 1332 dias:
 // - Autocorrelacion lag1=0.946: alta persistencia
 // - CV=27%, reversion promedio 16.5 dias
 // - Alpha adaptativo por z-score, ajustes contextuales NO encadenados
@@ -174,13 +175,9 @@ function modeloAR1(historico, climaIp, climaTq, abast, acpm) {
   var llMed = llIp.length ? llIp.reduce(function(a,b){return a+b;},0)/llIp.length : 0;
   var ajLl = llMed > 10 ? Math.min((llMed-10)/20, 1) * 0.03 : 0;
 
+  // Abastecimiento desactivado: datos SIPSA en toneladas no comparables entre anos
+  // (cobertura y metodologia cambian). Se activa cuando haya datos locales calibrados.
   var ajAbs = 0;
-  if (abast.length >= 3) {
-    var tons   = abast.map(function(d){return d.toneladas;});
-    var ultimos12 = tons.slice(-13, -1); var medAbs = ultimos12.length ? ultimos12.reduce(function(a,b){return a+b;},0)/ultimos12.length : 0;
-    var ratio  = medAbs > 0 ? (tons[tons.length-1] - medAbs) / medAbs : 0;
-    ajAbs = Math.max(-0.04, Math.min(0.04, -ratio * 0.2));
-  }
 
   var ajAcpm = acpm > 0 ? Math.max(-0.02, Math.min(0.02, (acpm-11000)/11000*0.3)) : 0;
 
