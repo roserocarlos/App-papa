@@ -178,7 +178,7 @@ function modeloAR1(historico, climaIp, climaTq, abast, acpm) {
   var ajAbs = 0;
   if (abast.length >= 3) {
     var tons   = abast.map(function(d){return d.toneladas;});
-    var medAbs = tons.slice(0,-1).reduce(function(a,b){return a+b;},0)/(tons.length-1);
+    var ultimos12 = tons.slice(-13, -1); var medAbs = ultimos12.length ? ultimos12.reduce(function(a,b){return a+b;},0)/ultimos12.length : 0;
     var ratio  = medAbs > 0 ? (tons[tons.length-1] - medAbs) / medAbs : 0;
     ajAbs = Math.max(-0.04, Math.min(0.04, -ratio * 0.2));
   }
