@@ -7,85 +7,110 @@
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Courier New", monospace; background: #f8f9f4; color: #1a2e1a; }
-header { background: #2d6a4f; color: white; padding: 16px 20px; }
-header h1 { font-size: 1.1rem; font-weight: bold; }
-header p { font-size: 0.7rem; opacity: 0.8; margin-top: 4px; }
-.wrap { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
-.selector { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-.btn-modelo {
-  font-family: "Courier New", monospace;
-  font-size: 0.7rem; padding: 8px 14px;
-  border: 2px solid #2d6a4f; border-radius: 4px;
-  background: white; color: #2d6a4f; cursor: pointer;
-  transition: all 0.2s;
+body { font-family: "Courier New", monospace; background: #f8f9f4; color: #1a2e1a; font-size: 14px; }
+header { background: #2d6a4f; color: white; padding: 14px 18px; }
+header h1 { font-size: 1rem; font-weight: bold; }
+header p { font-size: 0.68rem; opacity: 0.75; margin-top: 3px; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 18px 14px 60px; }
+
+.selector { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+.btn {
+  font-family: "Courier New", monospace; font-size: 0.65rem;
+  padding: 7px 12px; border: 2px solid #2d6a4f; border-radius: 4px;
+  background: white; color: #2d6a4f; cursor: pointer; transition: all 0.15s;
 }
-.btn-modelo.active { background: #2d6a4f; color: white; }
-.btn-modelo:hover { background: #2d6a4f; color: white; }
-.card { background: white; border: 1px solid #d4dace; border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
-.card-head { padding: 14px 18px; border-bottom: 1px solid #eef1ea; background: #f5f7f2; }
-.card-head h2 { font-size: 0.9rem; color: #2d6a4f; }
-.card-head .tag { font-size: 0.6rem; background: #e8f4ed; color: #2d6a4f; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
-.card-body { padding: 16px 18px; }
-.formula { background: #1a2e1a; color: #7ec8a0; padding: 12px 16px; border-radius: 6px; font-size: 0.78rem; line-height: 1.8; margin: 10px 0; overflow-x: auto; white-space: pre; }
-.params-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 12px 0; }
-.param { background: #f5f7f2; border-radius: 6px; padding: 10px; }
-.param-name { font-size: 0.6rem; text-transform: uppercase; color: #6b7d6e; margin-bottom: 4px; }
-.param-val { font-size: 0.95rem; font-weight: bold; color: #1a2e1a; }
-.param-desc { font-size: 0.62rem; color: #6b7d6e; margin-top: 2px; }
-.pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-.pros { background: #f0f7f2; border-left: 3px solid #2d6a4f; padding: 10px 12px; border-radius: 0 6px 6px 0; }
-.cons { background: #fdf5f0; border-left: 3px solid #c77b2e; padding: 10px 12px; border-radius: 0 6px 6px 0; }
-.pros h4, .cons h4 { font-size: 0.65rem; text-transform: uppercase; margin-bottom: 6px; }
-.pros h4 { color: #2d6a4f; }
-.cons h4 { color: #c77b2e; }
-.pros ul, .cons ul { list-style: none; }
-.pros li, .cons li { font-size: 0.7rem; line-height: 1.7; }
+.btn.active, .btn:hover { background: #2d6a4f; color: white; }
+
+.card { background: white; border: 1px solid #d4dace; border-radius: 8px; margin-bottom: 14px; overflow: hidden; }
+.card-head { padding: 12px 16px; border-bottom: 1px solid #eef1ea; background: #f5f7f2; display: flex; align-items: center; gap: 8px; }
+.card-head h2 { font-size: 0.88rem; color: #2d6a4f; }
+.tag { font-size: 0.58rem; background: #e8f4ed; color: #2d6a4f; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+.card-body { padding: 14px 16px; }
+
+.desc { font-size: 0.75rem; line-height: 1.65; color: #2a4a2a; margin-bottom: 12px; }
+
+.formula-box { background: #1a2e1a; color: #7ec8a0; padding: 11px 14px; border-radius: 6px; font-size: 0.72rem; line-height: 1.8; margin-bottom: 12px; overflow-x: auto; white-space: pre; }
+
+.params-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.param { background: #f5f7f2; border-radius: 5px; padding: 8px 10px; min-width: 120px; flex: 1; }
+.param-name { font-size: 0.58rem; text-transform: uppercase; color: #6b7d6e; margin-bottom: 3px; }
+.param-val { font-size: 0.88rem; font-weight: bold; color: #1a2e1a; }
+.param-desc { font-size: 0.6rem; color: #8a9a8a; margin-top: 2px; }
+
+.pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.pros, .cons { padding: 10px 12px; border-radius: 0 5px 5px 0; }
+.pros { background: #f0f7f2; border-left: 3px solid #2d6a4f; }
+.cons { background: #fdf5f0; border-left: 3px solid #c77b2e; }
+.pros h4 { font-size: 0.62rem; text-transform: uppercase; color: #2d6a4f; margin-bottom: 5px; }
+.cons h4 { font-size: 0.62rem; text-transform: uppercase; color: #c77b2e; margin-bottom: 5px; }
+.pros li, .cons li { font-size: 0.68rem; line-height: 1.65; list-style: none; }
 .pros li::before { content: "+ "; color: #2d6a4f; }
 .cons li::before { content: "- "; color: #c77b2e; }
-#chart { width: 100%; height: 320px; }
-.status { font-size: 0.68rem; color: #6b7d6e; padding: 8px 0; }
-.veredicto { padding: 12px 16px; border-radius: 6px; margin-top: 12px; font-size: 0.78rem; line-height: 1.6; }
-.veredicto.bueno { background: #f0f7f2; border-left: 3px solid #2d6a4f; }
-.veredicto.malo { background: #fdf0f0; border-left: 3px solid #b84040; }
-.veredicto.regular { background: #fef9ec; border-left: 3px solid #c77b2e; }
-.metrica { display: inline-block; margin-right: 16px; }
-.metrica-val { font-size: 1.1rem; font-weight: bold; }
-.metrica-label { font-size: 0.6rem; color: #6b7d6e; display: block; }
-@media(max-width:480px){ .pros-cons { grid-template-columns: 1fr; } #chart { height: 240px; } }
+
+.veredicto { padding: 10px 14px; border-radius: 5px; font-size: 0.73rem; line-height: 1.6; margin-bottom: 14px; }
+.veredicto.bueno  { background: #f0f7f2; border-left: 3px solid #2d6a4f; }
+.veredicto.regular{ background: #fef9ec; border-left: 3px solid #c77b2e; }
+.veredicto.malo   { background: #fdf0f0; border-left: 3px solid #b84040; }
+
+.chart-section { border-top: 1px solid #eef1ea; padding-top: 14px; }
+.chart-title { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7d6e; margin-bottom: 6px; display: flex; align-items: center; gap: 14px; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 0.62rem; }
+.leg-line { width: 20px; height: 2px; display: inline-block; border-radius: 1px; }
+.leg-dash { width: 20px; height: 0; border-top: 2px dashed #c77b2e; display: inline-block; }
+#chart { width: 100%; height: 300px; }
+
+.metricas { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eef1ea; }
+.met { }
+.met-val { font-size: 1rem; font-weight: bold; color: #1a2e1a; }
+.met-label { font-size: 0.58rem; color: #6b7d6e; text-transform: uppercase; }
+
+#status { font-size: 0.65rem; color: #6b7d6e; padding: 6px 0 10px; }
+
+@media(max-width:480px){
+  .pros-cons { grid-template-columns: 1fr; }
+  #chart { height: 240px; }
+}
 </style>
 </head>
 <body>
 <header>
-  <h1>Comparador de Modelos - Precio Papa Colombia</h1>
-  <p>Herramienta pedagogica | Datos reales SIPSA 1332 dias | Serie volatil CV=27%</p>
+  <h1>Comparador de Modelos de Prediccion</h1>
+  <p>Serie SIPSA papa Colombia | 1332 dias reales | CV=27% | Autocorr lag1=0.946</p>
 </header>
 <div class="wrap">
 
   <div class="selector" id="selector"></div>
+  <div id="status">Cargando datos SIPSA...</div>
 
-  <div class="card">
+  <div class="card" id="cardModelo">
     <div class="card-head">
-      <h2 id="modeloNombre">Cargando...</h2>
+      <h2 id="mNombre">...</h2>
+      <span class="tag" id="mTag"></span>
     </div>
     <div class="card-body">
-      <p id="modeloDesc" style="font-size:0.78rem;line-height:1.6;color:#3a5a3a;margin-bottom:10px;"></p>
-      <div class="formula" id="modeloFormula"></div>
-      <div class="params-grid" id="modeloParams"></div>
-      <div class="pros-cons">
-        <div class="pros"><h4>Ventajas para esta serie</h4><ul id="pros"></ul></div>
-        <div class="cons"><h4>Desventajas para esta serie</h4><ul id="cons"></ul></div>
-      </div>
-      <div class="veredicto" id="veredicto"></div>
-    </div>
-  </div>
 
-  <div class="card">
-    <div class="card-head"><h2>Prediccion 7 dias <span class="tag" id="tagModelo"></span></h2></div>
-    <div class="card-body">
-      <div id="status" class="status">Cargando datos SIPSA...</div>
-      <div id="chart"></div>
-      <div id="metricas" style="margin-top:12px;"></div>
+      <p class="desc" id="mDesc"></p>
+      <div class="formula-box" id="mFormula"></div>
+
+      <div class="params-row" id="mParams"></div>
+
+      <div class="pros-cons">
+        <div class="pros"><h4>Para esta serie</h4><ul id="mPros"></ul></div>
+        <div class="cons"><h4>Limitaciones</h4><ul id="mCons"></ul></div>
+      </div>
+
+      <div class="veredicto" id="mVeredicto"></div>
+
+      <div class="chart-section">
+        <div class="chart-title">
+          Ultimos 30 dias reales + prediccion 7 dias
+          <span class="leg"><span class="leg-line" style="background:#2d6a4f;"></span>Historico real</span>
+          <span class="leg"><span class="leg-dash"></span>Prediccion</span>
+        </div>
+        <div id="chart"></div>
+        <div class="metricas" id="mMetricas"></div>
+      </div>
+
     </div>
   </div>
 
@@ -93,309 +118,297 @@ header p { font-size: 0.7rem; opacity: 0.8; margin-top: 4px; }
 
 <script>
 var MODELOS = {
-  media_movil: {
-    nombre: "Media Movil Simple (SMA)",
+  sma: {
+    nombre: "Media Movil Simple",
     tag: "Clasico",
-    desc: "Promedia los ultimos N precios con igual peso. Predice que el precio futuro sera el promedio reciente. Es el modelo mas simple y el punto de partida de cualquier analisis de series temporales.",
-    formula: "P(t+k) = (1/N) * SUM[P(t-i), i=0..N-1]\n\nDonde N=30 dias (ventana)\nk = horizonte de prediccion (1..7 dias)",
+    desc: "Promedia los ultimos 30 dias con igual peso y predice ese valor para todos los dias futuros. Es el punto de partida de cualquier analisis de series temporales y la referencia contra la que se comparan modelos mas complejos.",
+    formula: "P(t+k) = (1/N) * SUM[ P(t-i), i=0..N-1 ]\n\nN = 30 dias  |  k = 1..7 dias\nTodos los dias tienen el mismo peso (1/N)",
     params: [
-      { nombre: "Ventana N", val: "30 dias", desc: "Dias incluidos en el promedio" },
-      { nombre: "Peso", val: "Uniforme", desc: "Todos los dias pesan igual" },
-      { nombre: "Horizonte", val: "7 dias", desc: "Dias hacia adelante" },
+      { n: "Ventana N", v: "30 dias", d: "Dias incluidos" },
+      { n: "Peso", v: "1/30 uniforme", d: "Sin preferencia temporal" },
+      { n: "Prediccion", v: "Constante", d: "Mismo valor los 7 dias" },
     ],
-    pros: ["Muy simple de entender", "Sin parametros que calibrar", "Estable, no diverge"],
-    cons: ["Ignora tendencia reciente", "Lento para adaptarse a cambios", "Predice el mismo valor todos los dias", "No captura la autocorrelacion lag1=0.946"],
-    veredicto: "malo",
-    veredictotxt: "Para esta serie con alta autocorrelacion (lag1=0.946), predecir siempre la media es suboptimo. El precio de manana es casi siempre parecido al de hoy, no al promedio de 30 dias. Error tipico: ~6-8% diario.",
-    calcular: function(pr, med) {
-      var m = pr.slice(-30).reduce(function(a,b){return a+b;},0)/Math.min(pr.length,30);
+    pros: ["Sin parametros que calibrar", "Estable, no diverge nunca", "Referencia facil de explicar"],
+    cons: ["Predice el mismo valor todos los dias", "Ignora que lag1=0.946 (hoy predice manana)", "Lento para adaptarse a cambios de precio"],
+    v: "malo",
+    vt: "Para esta serie con alta autocorrelacion (lag1=0.946), el precio de hoy predice el de manana mucho mejor que el promedio de 30 dias. Este modelo ignora esa informacion clave. Util solo como benchmark minimo.",
+    calc: function(pr, m30) {
       var res = [];
-      for(var i=0;i<7;i++) res.push(Math.round(m));
+      for (var i = 0; i < 7; i++) res.push(Math.round(m30));
       return res;
     }
   },
-  tendencia_lineal: {
-    nombre: "Tendencia Lineal (OLS)",
+  ols: {
+    nombre: "Tendencia Lineal OLS",
     tag: "Clasico",
-    desc: "Ajusta una linea recta sobre los ultimos 30 dias usando minimos cuadrados ordinarios y extrapola hacia adelante. Asume que la tendencia reciente continua indefinidamente.",
-    formula: "P(t+k) = a + b*(t+k)\n\nb = SUM[(xi-xm)*(yi-ym)] / SUM[(xi-xm)^2]\na = ym - b*xm\n\nDonde xi=indice dia, yi=precio dia i",
+    desc: "Ajusta una linea recta sobre los ultimos 30 dias usando minimos cuadrados y extrapola hacia adelante. Asume que la tendencia reciente continuara indefinidamente. Causo predicciones de +30% en esta serie.",
+    formula: "P(t+k) = a + b*(t+k)\n\nb = SUM[(xi-xm)*(yi-ym)] / SUM[(xi-xm)^2]\na = ym - b*xm\n\nProblema: si b>0 y k grande -> precio infinito",
     params: [
-      { nombre: "Ventana", val: "30 dias", desc: "Datos para estimar la pendiente" },
-      { nombre: "Metodo", val: "OLS", desc: "Minimos cuadrados ordinarios" },
-      { nombre: "Supuesto", val: "Linealidad", desc: "Tendencia constante hacia adelante" },
+      { n: "Ventana", v: "30 dias", d: "Para estimar pendiente" },
+      { n: "Metodo", v: "OLS", d: "Minimos cuadrados ordinarios" },
+      { n: "Supuesto", v: "Tendencia lineal", d: "Invalido en series volatiles" },
     ],
-    pros: ["Captura tendencia de corto plazo", "Facil de interpretar", "Bien documentado"],
-    cons: ["Diverge en series volatiles", "La pendiente de 7 dias puede ser espuria", "No respeta reversion a la media", "Extrapolacion no valida en series no estacionarias"],
-    veredicto: "malo",
-    veredictotxt: "El mayor problema de esta serie: sube fuerte 7 dias, la tendencia lineal predice que seguira subiendo indefinidamente. Pero los datos muestran que despues de picos el precio revierte en ~16.5 dias. Este modelo causo predicciones de +15% a +30% en pruebas reales.",
-    calcular: function(pr) {
-      var v = pr.slice(-30);
-      var n=v.length, m=v.reduce(function(a,b){return a+b;},0)/n, xm=(n-1)/2;
-      var num=0,den=0;
+    pros: ["Captura tendencia de corto plazo", "Facil de interpretar", "Bien documentado en estadistica"],
+    cons: ["Diverge: predijo +30% en pruebas reales", "No respeta reversion a la media documentada", "Pendiente de 7 dias puede ser ruido puro"],
+    v: "malo",
+    vt: "Este modelo causo los primeros problemas del sistema: el precio subio fuerte en los 7 dias previos, la pendiente extrapolo esa subida y predijo +30% al dia 7. La serie SIPSA papa NO es tendencia-estacionaria sino que revierte a la media en ~16.5 dias.",
+    calc: function(pr) {
+      var v = pr.slice(-30), n = v.length, m = v.reduce(function(a,b){return a+b;},0)/n;
+      var xm=(n-1)/2, num=0, den=0;
       v.forEach(function(y,x){num+=(x-xm)*(y-m);den+=(x-xm)*(x-xm);});
-      var sl=den?num/den:0;
-      var res=[];
-      for(var i=0;i<7;i++) res.push(Math.round(Math.max(m+sl*(n+i),500)));
+      var sl = den ? num/den : 0;
+      var res = [];
+      for (var i=0; i<7; i++) res.push(Math.round(Math.max(m+sl*(n+i), 500)));
       return res;
     }
   },
   ema: {
-    nombre: "Media Exponencial (EMA)",
+    nombre: "Media Exponencial EMA",
     tag: "Tecnico",
-    desc: "Promedia con peso exponencial decreciente: los dias recientes pesan mas que los lejanos. Alpha controla la velocidad de adaptacion. Usada ampliamente en analisis tecnico de trading.",
-    formula: "EMA(t) = alpha*P(t) + (1-alpha)*EMA(t-1)\n\nP(t+k) = EMA(t) + slope*(k)\nslope = pendiente suavizada ultimos 14d\nalpha = 0.1 (suavizado fuerte)",
+    desc: "Asigna peso exponencialmente decreciente: los dias recientes pesan mas. Alpha=0.1 da suavizado fuerte. Luego extrapola con pendiente lineal sobre los ultimos 14 dias. Muy usada en trading tecnico de commodities.",
+    formula: "EMA(t) = alpha*P(t) + (1-alpha)*EMA(t-1)\nalpha = 0.1  (suavizado fuerte)\n\nP(t+k) = EMA(t) + slope_14d * k\nslope_14d = pendiente OLS sobre ultimos 14 dias",
     params: [
-      { nombre: "Alpha", val: "0.10", desc: "Peso al dato mas reciente" },
-      { nombre: "Suavizado", val: "Fuerte", desc: "Reduce ruido, mas estable" },
-      { nombre: "Pendiente", val: "14 dias", desc: "Ventana para calcular slope" },
+      { n: "Alpha", v: "0.10", d: "Peso al dato mas reciente" },
+      { n: "Pendiente", v: "14 dias", d: "Ventana para slope" },
+      { n: "Problema", v: "Extrapolacion", d: "Misma limitacion que OLS" },
     ],
-    pros: ["Mas peso a datos recientes", "Reduce ruido", "Clasico en trading"],
-    cons: ["Pendiente sigue divergiendo", "EMA queda rezagada en picos", "Alpha es arbitrario sin calibracion", "Misma limitacion que OLS en extrapolacion"],
-    veredicto: "regular",
-    veredictotxt: "Mejor que SMA para capturar cambios recientes, pero la extrapolacion con pendiente sigue divergiendo en series volatiles como esta. En pruebas reales seguia prediciendo +15% al dia 7.",
-    calcular: function(pr) {
+    pros: ["Mas peso a datos recientes que SMA", "Reduce ruido de picos individuales", "Estandar en analisis tecnico de trading"],
+    cons: ["La pendiente sigue divergiendo igual que OLS", "EMA queda rezagada en cambios bruscos", "Alpha=0.1 es arbitrario sin calibracion"],
+    v: "regular",
+    vt: "Mejor que SMA para capturar cambios recientes, pero la extrapolacion con pendiente hereda el mismo problema de OLS: si el precio subio en los 14 dias previos, predice que seguira subiendo. En pruebas reales seguia produciendo predicciones de +12-15% al dia 7.",
+    calc: function(pr) {
       var alpha=0.1, ema=pr[0];
-      for(var i=1;i<pr.length;i++) ema=alpha*pr[i]+(1-alpha)*ema;
+      for (var i=1; i<pr.length; i++) ema=alpha*pr[i]+(1-alpha)*ema;
       var rec=pr.slice(-14), nr=rec.length;
       var mr=rec.reduce(function(a,b){return a+b;},0)/nr, xmr=(nr-1)/2;
       var num=0,den=0;
       rec.forEach(function(y,x){num+=(x-xmr)*(y-mr);den+=(x-xmr)*(x-xmr);});
-      var sl=den?num/den:0;
-      var res=[];
-      for(var i=0;i<7;i++) res.push(Math.round(Math.max(ema+sl*(i+1),500)));
+      var sl = den?num/den:0;
+      var res = [];
+      for (var i=0; i<7; i++) res.push(Math.round(Math.max(ema+sl*(i+1), 500)));
       return res;
     }
   },
-  reversion_media: {
+  reversion: {
     nombre: "Reversion a la Media",
     tag: "Estadistico",
-    desc: "Asume que el precio siempre revierte al promedio historico. Cada dia el precio se acerca un porcentaje fijo (vel) hacia la media. Fundamentado en la hipotesis de mercados eficientes para commodities.",
-    formula: "P(t+k) = P(t+k-1) + vel*(media30 - P(t+k-1))\n\nDonde vel = velocidad de reversion (8% diario)\nmedia30 = promedio ultimos 30 dias\n\nEquivalente a: P(t+k) = media30 + (P(t)-media30)*(1-vel)^k",
+    desc: "Asume que el precio siempre se acerca al promedio historico. Cada dia cierra un porcentaje fijo del gap. Fundamentado en la hipotesis de mercados eficientes para commodities. La reversion observada en datos reales es de 16.5 dias.",
+    formula: "P(t+k) = P(t+k-1) + vel * (media30 - P(t+k-1))\n\nvel = 0.08 (8% del gap por dia)\nEquivalente: P(t+k) = media30 + (P(t)-media30)*(1-vel)^k\n\nCalibracion: reversion observada = 16.5 dias -> vel~0.08",
     params: [
-      { nombre: "Velocidad", val: "8% / dia", desc: "Fraccion del gap que se cierra" },
-      { nombre: "Media", val: "30 dias", desc: "Punto de atraccion" },
-      { nombre: "Calibracion", val: "16.5 dias", desc: "Reversion observada en datos reales" },
+      { n: "Velocidad", v: "8% / dia", d: "Calibrado sobre 16.5 dias" },
+      { n: "Atractor", v: "Media 30d", d: "Nivel de largo plazo" },
+      { n: "Valido cuando", v: "|z| > 1.5", d: "Precio en extremo estadistico" },
     ],
-    pros: ["Fundamentado en datos: reversion real = 16.5 dias", "No diverge", "Correcto cuando precio esta en extremo"],
-    cons: ["Cuando precio esta en rango normal, la media NO es el mejor predictor", "Ignora autocorrelacion alta (lag1=0.946)", "Velocidad arbitraria sin calibracion bayesiana"],
-    veredicto: "regular",
-    veredictotxt: "Correcto en teoria para series con reversion documentada. El problema: con vel=8% y precio solo 1 desviacion de la media, predice caidas cuando la autocorrelacion dice que el precio de hoy predice bien el de manana. Adecuado cuando z-score > 1.5.",
-    calcular: function(pr, med30) {
+    pros: ["Fundamentado en datos reales: 16.5 dias observados", "No diverge matematicamente", "Correcto cuando precio esta en extremo"],
+    cons: ["Cuando |z|<1 la media NO es mejor predictor que precio actual", "Ignora autocorrelacion lag1=0.946 en rango normal", "Fuerza reversion incluso cuando no hay senal"],
+    v: "regular",
+    vt: "Correcto en teoria para series con reversion documentada. Pero aplicarlo siempre es incorrecto: con z=-1.07 (rango normal) el precio de hoy ($3.103) predice mejor el de manana que la media30 ($3.287). Este modelo fuerza una subida artificial hacia la media cuando no hay senal estadistica.",
+    calc: function(pr, m30) {
       var vel=0.08, prev=pr[pr.length-1], res=[];
-      for(var i=0;i<7;i++){
-        var p=prev+vel*(med30-prev);
-        res.push(Math.round(p));
-        prev=p;
-      }
+      for (var i=0; i<7; i++) { var p=prev+vel*(m30-prev); res.push(Math.round(p)); prev=p; }
       return res;
     }
   },
-  ar1_fijo: {
-    nombre: "AR(1) con alpha fijo",
+  ar1: {
+    nombre: "AR(1) Alpha Fijo",
     tag: "Econometrico",
-    desc: "Modelo autorregresivo de orden 1: el precio de manana depende linealmente del precio de hoy. Alpha fijo calibrado sobre la autocorrelacion observada lag1=0.946. Estandar en econometria de series de tiempo.",
-    formula: "P(t+1) = alpha*P(t) + (1-alpha)*mu\n\nalpha = 0.90 (fijo, calibrado sobre lag1=0.946)\nmu = media30 (nivel de largo plazo)\n\nVarianza pronostico: sigma^2 * (1-alpha^2k)/(1-alpha^2)",
+    desc: "Modelo autorregresivo de orden 1: el precio de manana depende linealmente del precio de hoy. Alpha=0.90 calibrado directamente sobre la autocorrelacion lag1=0.946 medida en los 1332 dias reales. Estandar Box-Jenkins para series temporales.",
+    formula: "P(t+1) = alpha * P(t) + (1-alpha) * mu\n\nalpha = 0.90  (calibrado sobre lag1=0.946)\nmu = media30  (nivel de largo plazo)\n\nVarianza prediccion: sigma^2*(1-alpha^(2k))/(1-alpha^2)",
     params: [
-      { nombre: "Alpha", val: "0.90", desc: "Calibrado sobre autocorrelacion lag1" },
-      { nombre: "Mu", val: "Media 30d", desc: "Nivel de largo plazo" },
-      { nombre: "Base teorica", val: "Box-Jenkins", desc: "Metodologia estandar ARIMA" },
+      { n: "Alpha", v: "0.90", d: "= autocorrelacion lag1 medida" },
+      { n: "Mu", v: "Media 30 dias", d: "Nivel de largo plazo" },
+      { n: "Base", v: "Box-Jenkins ARIMA", d: "Metodologia estandar" },
     ],
-    pros: ["Calibrado sobre datos reales (lag1=0.946)", "No diverge", "Estandar en econometria", "Captura persistencia de la serie"],
-    cons: ["Alpha fijo no distingue entre regimenes", "Ignora cuando precio esta en extremo estadistico", "No incorpora variables exogenas"],
-    veredicto: "bueno",
-    veredictotxt: "El mejor modelo simple para esta serie. Alpha=0.90 refleja la autocorrelacion real medida (lag1=0.946). Produce predicciones entre +1% y +6% cuando el precio esta cerca de la media, coherente con la volatilidad diaria promedio de 6.21%.",
-    calcular: function(pr, med30) {
+    pros: ["Directamente calibrado sobre datos reales", "No diverge, converge a media30", "Estandar econometrico bien documentado"],
+    cons: ["Alpha fijo no distingue entre regimenes de precio", "Sin variables exogenas (clima, ACPM)", "Igual para todos los niveles de z-score"],
+    v: "bueno",
+    vt: "El mejor modelo simple para esta serie. Alpha=0.90 refleja la persistencia real medida (lag1=0.946). Produccion de manana: 0.90*precio_hoy + 0.10*media30. Con precio=$3.103 y media=$3.287: prediccion dia1=$3.111. Variaciones en rango +1% a +5% al dia 7.",
+    calc: function(pr, m30) {
       var alpha=0.90, prev=pr[pr.length-1], res=[];
-      for(var i=0;i<7;i++){
-        var p=alpha*prev+(1-alpha)*med30;
-        res.push(Math.round(p));
-        prev=p;
-      }
+      for (var i=0; i<7; i++) { var p=alpha*prev+(1-alpha)*m30; res.push(Math.round(p)); prev=p; }
       return res;
     }
   },
-  ar1_adaptativo: {
-    nombre: "AR(1) Adaptativo (modelo actual)",
-    tag: "Actual",
-    desc: "AR(1) con alpha que cambia segun el z-score actual. Cuando el precio esta en rango normal usa alta persistencia (alpha=0.90). Cuando esta en extremo estadistico aumenta la reversion (alpha=0.55). Combina persistencia y reversion de forma dinamica.",
-    formula: "alpha = 0.90 si |z| < 1.0  (rango normal)\nalpha = 0.75 si |z| < 1.5  (leve desviacion)\nalpha = 0.55 si |z| >= 1.5 (extremo estadistico)\n\nP(t+1) = alpha*P(t) + (1-alpha)*media30\nz = (P(t) - media30) / std30",
+  ar1_adapt: {
+    nombre: "AR(1) Adaptativo",
+    tag: "Modelo actual",
+    desc: "AR(1) con alpha que cambia segun el z-score actual. En rango normal usa alta persistencia (alpha=0.90). En extremo estadistico aumenta la reversion (alpha=0.55). Combina ambas estrategias segun el contexto del precio.",
+    formula: "z = (P(t) - media30) / std30\n\nalpha = 0.90  si |z| < 1.0  (rango normal)\nalpha = 0.75  si |z| < 1.5  (leve desviacion)\nalpha = 0.55  si |z| >= 1.5 (extremo estadistico)\n\nP(t+1) = alpha(z) * P(t) + (1-alpha(z)) * media30",
     params: [
-      { nombre: "Alpha min", val: "0.55", desc: "En extremo estadistico" },
-      { nombre: "Alpha max", val: "0.90", desc: "En rango normal" },
-      { nombre: "Umbral", val: "|z| = 1.0/1.5", desc: "Puntos de cambio de regimen" },
+      { n: "Z actual", v: "-1.07", d: "Rango normal -> alpha=0.75" },
+      { n: "Alpha rango", v: "0.75", d: "Mezcla moderada hoy" },
+      { n: "Umbrales", v: "1.0 / 1.5 sigma", d: "Puntos de cambio de regimen" },
     ],
-    pros: ["Adapta persistencia al contexto", "Combina AR(1) y reversion a la media", "Fundamentado en datos reales", "No diverge"],
-    cons: ["Umbrales z=1.0/1.5 son arbitrarios", "Sin variables exogenas validadas", "Perturbaciones contextuales aun sin calibrar"],
-    veredicto: "bueno",
-    veredictotxt: "Mejor que AR(1) fijo porque distingue regimenes. Con z=-1.07 actual usa alpha=0.75 (mezcla moderada). La limitacion principal: los ajustes de abastecimiento, lluvia y ACPM aun no estan calibrados sobre datos locales de Ipiales.",
-    calcular: function(pr, med30, std30) {
-      var hoy=pr[pr.length-1], z=(hoy-med30)/std30;
+    pros: ["Adapta la persistencia al contexto estadistico", "Usa reversion solo cuando hay senal real", "Calibrado sobre autocorrelacion y reversion medidas"],
+    cons: ["Umbrales z=1.0/1.5 son heuristicos no optimizados", "Sin calibracion bayesiana de los umbrales", "Perturbaciones exogenas aun sin datos locales"],
+    v: "bueno",
+    vt: "Modelo actual en produccion. Con z=-1.07 usa alpha=0.75. Prediccion dia1: 0.75*3103 + 0.25*3287 = $3.149 + perturbacion ACPM+estacional ~$70 = $3.219 (+3.7%). Coherente con volatilidad diaria promedio de 6.21% medida en datos reales.",
+    calc: function(pr, m30, s30) {
+      var hoy=pr[pr.length-1], z=(hoy-m30)/s30;
       var az=Math.abs(z), alpha=az<1.0?0.90:az<1.5?0.75:0.55;
       var prev=hoy, res=[];
-      for(var i=0;i<7;i++){
-        var p=alpha*prev+(1-alpha)*med30;
-        res.push(Math.round(p));
-        prev=p;
-      }
+      for (var i=0; i<7; i++) { var p=alpha*prev+(1-alpha)*m30; res.push(Math.round(p)); prev=p; }
       return res;
     }
   },
   zscore_rsi: {
     nombre: "Z-score + RSI Combinado",
     tag: "Tecnico avanzado",
-    desc: "Usa dos indicadores independientes para confirmar senales. Z-score mide desviacion estadistica. RSI mide momentum relativo. Solo ajusta el modelo cuando ambos confirman la misma direccion.",
-    formula: "z = (P(t) - media30) / std30\nRSI14 = 100 - 100/(1 + AG/AP)\n\nSi z > 1.5 Y RSI > 70: alpha = 0.50 (reversion fuerte)\nSi z < -1.5 Y RSI < 30: alpha = 0.50 (rebote fuerte)\nOtro caso: alpha = 0.90 (persistencia)",
+    desc: "Doble confirmacion: solo ajusta el modelo cuando Z-score Y RSI coinciden en la misma direccion. Si ambos indican sobrecompra o sobreventa, activa reversion fuerte. Si no coinciden, usa persistencia normal. Reduce falsas senales.",
+    formula: "RSI14 = 100 - 100/(1 + AvgGain/AvgLoss)\nz = (P(t) - media30) / std30\n\nSi z>1.5 AND RSI>70: alpha=0.50  (reversion bajista)\nSi z<-1.5 AND RSI<30: alpha=0.50  (reversion alcista)\nOtro caso:            alpha=0.90  (persistencia)\n\nHoy: RSI=46.3 (neutral), z=-1.07 -> alpha=0.90",
     params: [
-      { nombre: "RSI actual", val: "46.3", desc: "Zona neutral (30-70)" },
-      { nombre: "Z-score", val: "-1.07", desc: "Rango normal (<1.5 desv)" },
-      { nombre: "Senal hoy", val: "SIN SENAL", desc: "Ambos indicadores neutrales" },
+      { n: "RSI actual", v: "46.3", d: "Zona neutral (30-70)" },
+      { n: "Z actual", v: "-1.07", d: "Rango normal (<1.5 sigma)" },
+      { n: "Senal hoy", v: "SIN SENAL", d: "Ambos indicadores neutrales" },
     ],
-    pros: ["Doble confirmacion reduce falsas senales", "RSI documentado en commodities agricolas", "Solo actua en extremos reales"],
-    cons: ["Hoy no hay senal (RSI=46, z=-1.07)", "En zona neutral se comporta igual que AR(1)", "RSI en serie diaria tiene mas ruido que en datos semanales"],
-    veredicto: "bueno",
-    veredictotxt: "Correcto conceptualmente pero hoy no genera senal diferente al AR(1) basico porque RSI=46 y z=-1.07 estan en zona neutral. Util para detectar picos extremos. En los datos historicos, los momentos RSI>70 + z>1.5 coincidieron con los picos de $4000-$4500.",
-    calcular: function(pr, med30, std30) {
-      var hoy=pr[pr.length-1], z=(hoy-med30)/std30;
+    pros: ["Doble confirmacion reduce falsas senales", "RSI documentado en commodities agricolas", "Solo actua en extremos estadisticos reales"],
+    cons: ["Hoy sin senal: se comporta igual que AR(1) fijo", "RSI en datos diarios tiene mas ruido que en semanales", "Picos historicos $4000-4500 coincidian con RSI>70+z>1.5"],
+    v: "bueno",
+    vt: "Correcto conceptualmente pero hoy (RSI=46, z=-1.07) no genera senal diferente al AR(1) basico. Es mas util como alerta de extremos que como predictor diario. Los picos historicos de $4.000-$4.500 si coincidieron con RSI>70 + z>1.5 simultaneamente.",
+    calc: function(pr, m30, s30) {
+      var hoy=pr[pr.length-1], z=(hoy-m30)/s30;
       var per=14, g=0, p2=0;
-      for(var i=pr.length-per;i<pr.length;i++){
-        var d=pr[i]-pr[i-1]; if(d>0)g+=d; else p2+=Math.abs(d);
+      for (var i=pr.length-per; i<pr.length; i++) {
+        var d=pr[i]-pr[i-1]; if(d>0) g+=d; else p2+=Math.abs(d);
       }
-      var ag=g/per,ap=p2/per, rsi=ap===0?100:100-100/(1+ag/ap);
-      var alpha=0.90;
-      if(z>1.5&&rsi>70) alpha=0.50;
-      if(z<-1.5&&rsi<30) alpha=0.50;
+      var ag=g/per, ap=p2/per;
+      var rsi = ap===0 ? 100 : 100-100/(1+ag/ap);
+      var alpha = (z>1.5&&rsi>70)||(z<-1.5&&rsi<30) ? 0.50 : 0.90;
       var prev=hoy, res=[];
-      for(var i=0;i<7;i++){
-        var pt=alpha*prev+(1-alpha)*med30;
-        res.push(Math.round(pt));
-        prev=pt;
-      }
+      for (var i=0; i<7; i++) { var pt=alpha*prev+(1-alpha)*m30; res.push(Math.round(pt)); prev=pt; }
       return res;
     }
   }
 };
 
-var _historico = null;
-var _modeloActual = "ar1_adaptativo";
+var _hist = null;
+var _cur = "ar1_adapt";
 
-async function cargarDatos() {
-  document.getElementById("status").textContent = "Consultando SIPSA del DANE...";
+async function cargar() {
   try {
-    var r = await fetch("/api/sipsa?refresh=1");
+    var r = await fetch("/api/sipsa");
     var data = await r.json();
     if (!data.ok) throw new Error(data.error || "Error");
-    _historico = data.historico;
-    document.getElementById("status").textContent = data.historico.length + " dias cargados | ultimo: " + data.historico[data.historico.length-1].fecha;
-    renderModelo(_modeloActual);
+    _hist = data.historico;
+    document.getElementById("status").textContent =
+      _hist.length + " dias cargados | ultimo: " + _hist[_hist.length-1].fecha +
+      " | precio: $" + _hist[_hist.length-1].precio.toLocaleString("es-CO");
+    render(_cur);
   } catch(e) {
-    document.getElementById("status").textContent = "Error: " + e.message;
+    document.getElementById("status").textContent = "Error cargando datos: " + e.message;
   }
 }
 
-function calcEstadisticos() {
-  if (!_historico) return null;
-  var pr = _historico.map(function(d){return d.precio;});
+function stats() {
+  if (!_hist) return null;
+  var pr = _hist.map(function(d){return d.precio;});
   var v30 = pr.slice(-30);
-  var med = v30.reduce(function(a,b){return a+b;},0)/v30.length;
-  var std = Math.sqrt(v30.reduce(function(s,x){return s+(x-med)*(x-med);},0)/v30.length);
-  return { pr: pr, med: med, std: std };
+  var m = v30.reduce(function(a,b){return a+b;},0)/v30.length;
+  var s = Math.sqrt(v30.reduce(function(t,x){return t+(x-m)*(x-m);},0)/v30.length);
+  return { pr: pr, m30: m, s30: s };
 }
 
-function renderModelo(key) {
-  _modeloActual = key;
-  var m = MODELOS[key];
-  if (!m) return;
-
-  document.querySelectorAll(".btn-modelo").forEach(function(b){ b.classList.remove("active"); });
-  var btn = document.getElementById("btn-" + key);
+function render(key) {
+  _cur = key;
+  var mo = MODELOS[key];
+  document.querySelectorAll(".btn").forEach(function(b){ b.classList.remove("active"); });
+  var btn = document.getElementById("b-"+key);
   if (btn) btn.classList.add("active");
 
-  document.getElementById("modeloNombre").innerHTML = m.nombre + ' <span class="tag">' + m.tag + "</span>";
-  document.getElementById("modeloDesc").textContent = m.desc;
-  document.getElementById("modeloFormula").textContent = m.formula;
-  document.getElementById("tagModelo").textContent = m.tag;
+  document.getElementById("mNombre").textContent = mo.nombre;
+  document.getElementById("mTag").textContent = mo.tag;
+  document.getElementById("mDesc").textContent = mo.desc;
+  document.getElementById("mFormula").textContent = mo.formula;
 
-  var paramsHtml = "";
-  m.params.forEach(function(p){
-    paramsHtml += "<div class='param'><div class='param-name'>" + p.nombre + "</div><div class='param-val'>" + p.val + "</div><div class='param-desc'>" + p.desc + "</div></div>";
+  var ph = "";
+  mo.params.forEach(function(p){
+    ph += "<div class='param'><div class='param-name'>"+p.n+"</div><div class='param-val'>"+p.v+"</div><div class='param-desc'>"+p.d+"</div></div>";
   });
-  document.getElementById("modeloParams").innerHTML = paramsHtml;
+  document.getElementById("mParams").innerHTML = ph;
 
-  var prosHtml = "", consHtml = "";
-  m.pros.forEach(function(p){ prosHtml += "<li>" + p + "</li>"; });
-  m.cons.forEach(function(c){ consHtml += "<li>" + c + "</li>"; });
-  document.getElementById("pros").innerHTML = prosHtml;
-  document.getElementById("cons").innerHTML = consHtml;
+  var ph2="", ch="";
+  mo.pros.forEach(function(x){ ph2+="<li>"+x+"</li>"; });
+  mo.cons.forEach(function(x){ ch+="<li>"+x+"</li>"; });
+  document.getElementById("mPros").innerHTML = ph2;
+  document.getElementById("mCons").innerHTML = ch;
 
-  document.getElementById("veredicto").className = "veredicto " + m.veredicto;
-  document.getElementById("veredicto").textContent = m.veredictotxt;
+  document.getElementById("mVeredicto").className = "veredicto "+mo.v;
+  document.getElementById("mVeredicto").textContent = mo.vt;
 
-  if (!_historico) return;
-  var est = calcEstadisticos();
-  var pred = m.calcular(est.pr, est.med, est.std);
-  renderGrafica(pred, est);
+  if (!_hist) return;
+  var st = stats();
+  var pred = mo.calc(st.pr, st.m30, st.s30);
+  grafica(pred, st);
 }
 
-function renderGrafica(pred, est) {
-  var hist = _historico.slice(-60);
-  var hoy = hist[hist.length-1];
+function grafica(pred, st) {
+  // Solo ultimos 30 dias reales para que la prediccion sea visible y comparable
+  var hist30 = _hist.slice(-30);
+  var ultimo = hist30[hist30.length-1];
   var fechasPred = [];
-  var base = new Date(hoy.fecha + "T12:00:00Z");
-  for(var i=0;i<7;i++){
-    var d=new Date(base); d.setUTCDate(d.getUTCDate()+i+1);
+  var base = new Date(ultimo.fecha + "T12:00:00Z");
+  for (var i=0; i<7; i++) {
+    var d = new Date(base); d.setUTCDate(d.getUTCDate()+i+1);
     fechasPred.push(d.toISOString().split("T")[0]);
   }
 
-  var delta7 = ((pred[6]-hoy.precio)/hoy.precio*100).toFixed(1);
-  var delta1 = ((pred[0]-hoy.precio)/hoy.precio*100).toFixed(1);
-  var mae = pred.map(function(p,i){ return Math.abs(p - (est.med + (est.std * 0))); });
+  var hoy = ultimo.precio;
+  var d1 = ((pred[0]-hoy)/hoy*100).toFixed(1);
+  var d7 = ((pred[6]-hoy)/hoy*100).toFixed(1);
+  var signo = function(v){ return v>0?"+":""; };
 
-  document.getElementById("metricas").innerHTML =
-    "<span class='metrica'><span class='metrica-val'>" + (delta1>0?"+":"") + delta1 + "%</span><span class='metrica-label'>Dia 1 vs hoy</span></span>" +
-    "<span class='metrica'><span class='metrica-val'>" + (delta7>0?"+":"") + delta7 + "%</span><span class='metrica-label'>Dia 7 vs hoy</span></span>" +
-    "<span class='metrica'><span class='metrica-val'>$" + pred[0].toLocaleString("es-CO") + "</span><span class='metrica-label'>Precio manana</span></span>" +
-    "<span class='metrica'><span class='metrica-val'>$" + pred[6].toLocaleString("es-CO") + "</span><span class='metrica-label'>Precio dia 7</span></span>";
+  document.getElementById("mMetricas").innerHTML =
+    "<div class='met'><div class='met-val'>$"+pred[0].toLocaleString("es-CO")+"</div><div class='met-label'>Manana</div></div>" +
+    "<div class='met'><div class='met-val'>"+(signo(d1)+d1)+"%</div><div class='met-label'>Variacion dia 1</div></div>" +
+    "<div class='met'><div class='met-val'>$"+pred[6].toLocaleString("es-CO")+"</div><div class='met-label'>Dia 7</div></div>" +
+    "<div class='met'><div class='met-val'>"+(signo(d7)+d7)+"%</div><div class='met-label'>Variacion dia 7</div></div>";
 
   Plotly.newPlot("chart", [
     {
-      x: hist.map(function(d){return d.fecha;}),
-      y: hist.map(function(d){return d.precio;}),
-      type:"scatter", mode:"lines", name:"Real",
-      line:{color:"#2d6a4f", width:2},
-      hovertemplate:"%{x}<br><b>$%{y:,.0f}</b><extra></extra>",
+      x: hist30.map(function(d){return d.fecha;}),
+      y: hist30.map(function(d){return d.precio;}),
+      type: "scatter", mode: "lines", name: "Real",
+      line: { color: "#2d6a4f", width: 2.5 },
+      hovertemplate: "%{x}<br><b>$%{y:,.0f}</b><extra>Real</extra>",
     },
     {
-      x: [hoy.fecha].concat(fechasPred),
-      y: [hoy.precio].concat(pred),
-      type:"scatter", mode:"lines+markers", name:"Prediccion",
-      line:{color:"#c77b2e", width:2, dash:"dot"},
-      marker:{size:5, color:"#c77b2e"},
-      hovertemplate:"%{x}<br><b>~$%{y:,.0f}</b><extra></extra>",
+      x: [ultimo.fecha].concat(fechasPred),
+      y: [ultimo.precio].concat(pred),
+      type: "scatter", mode: "lines+markers", name: "Prediccion",
+      line: { color: "#c77b2e", width: 2, dash: "dash" },
+      marker: { size: 6, color: "#c77b2e", symbol: "circle-open", line: { width: 2, color: "#c77b2e" } },
+      hovertemplate: "%{x}<br><b>~$%{y:,.0f}</b><extra>Prediccion</extra>",
     }
   ], {
-    margin:{t:8,l:62,r:12,b:44},
-    paper_bgcolor:"transparent", plot_bgcolor:"#f8faf5",
-    font:{family:"Courier New,monospace", size:10, color:"#6b7d6e"},
-    xaxis:{gridcolor:"#e2e8dc", showline:false, tickformat:"%b %y"},
-    yaxis:{gridcolor:"#e2e8dc", showline:false, tickformat:",.0f", tickprefix:"$"},
-    hovermode:"x unified", showlegend:false,
-    shapes:[{type:"line", x0:hoy.fecha, x1:hoy.fecha, y0:0, y1:1, yref:"paper",
-      line:{color:"#d4dace", width:1, dash:"dot"}}],
-  }, {responsive:true, displayModeBar:false});
+    margin: { t: 8, l: 65, r: 14, b: 44 },
+    paper_bgcolor: "transparent", plot_bgcolor: "#f8faf5",
+    font: { family: "Courier New,monospace", size: 10, color: "#6b7d6e" },
+    xaxis: { gridcolor: "#e2e8dc", showline: false, tickformat: "%d/%m" },
+    yaxis: { gridcolor: "#e2e8dc", showline: false, tickformat: ",.0f", tickprefix: "$" },
+    hovermode: "x unified", showlegend: false,
+    shapes: [{
+      type: "line", x0: ultimo.fecha, x1: ultimo.fecha, y0: 0, y1: 1, yref: "paper",
+      line: { color: "#bbd0c4", width: 1.5, dash: "dot" }
+    }],
+    annotations: [{
+      x: ultimo.fecha, y: 1, yref: "paper", text: "hoy", showarrow: false,
+      font: { size: 9, color: "#6b7d6e" }, xanchor: "left", xshift: 4
+    }]
+  }, { responsive: true, displayModeBar: false });
 }
 
-// Construir botones
+// Botones
 var sel = document.getElementById("selector");
-Object.keys(MODELOS).forEach(function(key) {
-  var btn = document.createElement("button");
-  btn.className = "btn-modelo" + (key === _modeloActual ? " active" : "");
-  btn.id = "btn-" + key;
-  btn.textContent = MODELOS[key].nombre.split("(")[0].trim();
-  btn.onclick = function(){ renderModelo(key); };
-  sel.appendChild(btn);
+Object.keys(MODELOS).forEach(function(k) {
+  var b = document.createElement("button");
+  b.className = "btn" + (k===_cur?" active":"");
+  b.id = "b-"+k;
+  b.textContent = MODELOS[k].nombre;
+  b.onclick = function(){ render(k); };
+  sel.appendChild(b);
 });
 
-cargarDatos();
+cargar();
 </script>
 </body>
 </html>
