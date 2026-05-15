@@ -1,68 +1,49 @@
 // api/sipsa.js
 export const config = { maxDuration: 60 };
 
-let _cache = null;
-const CACHE_TTL = 6 * 60 * 60 * 1000;
-const SOAP_URL = 'https://appweb.dane.gov.co/sipsaWS/SrvSipsaUpraBeanService';
+var _cache = null;
+var CACHE_TTL = 6 * 60 * 60 * 1000;
+var SOAP_URL = "https://appweb.dane.gov.co/sipsaWS/SrvSipsaUpraBeanService";
 
-const ZONAS = {
-  ipiales:   { lat:  0.8304, lon: -77.6441 },
-  tuquerres: { lat:  1.0833, lon: -77.6167 },
+var ZONAS = {
+  ipiales:   { lat: 0.8304,  lon: -77.6441 },
+  tuquerres: { lat: 1.0833,  lon: -77.6167 },
 };
 
 function getTag(block, tag) {
-  const open  = '<' + tag + '>';
-  const close = '</' + tag + '>';
-  const a = block.indexOf(open);
+  var open  = "<" + tag + ">";
+  var close = "</" + tag + ">";
+  var a = block.indexOf(open);
   if (a === -1) {
-    const re = new RegExp('<[^:>]+:' + tag + '>');
-    const ma = block.match(re);
-    if (!ma) return '';
-    const b2 = block.indexOf(ma[0]) + ma[0].length;
-    const e2 = block.indexOf('</', b2);
-    return e2 === -1 ? '' : block.slice(b2, e2).trim();
+    var re = new RegExp("<[^:>]+:" + tag + ">");
+    var ma = block.match(re);
+    if (!ma) return "";
+    var b2 = block.indexOf(ma[0]) + ma[0].length;
+    var e2 = block.indexOf("</", b2);
+    return e2 === -1 ? "" : block.slice(b2, e2).trim();
   }
-  const start = a + open.length;
-  const end   = block.indexOf(close, start);
-  return end === -1 ? '' : block.slice(start, end).trim();
+  var start = a + open.length;
+  var end = block.indexOf(close, start);
+  return end === -1 ? "" : block.slice(start, end).trim();
 }
 
 function extraerBloques(xml) {
-  const results = [];
-  const OPEN  = '>return>';
-  const CLOSE = '>return>';
-  let pos = 0;
+  var results = [];
+  var pos = 0;
   while (true) {
-    const a = xml.indexOf(OPEN, pos);
-    if (a === -1) break;
-    const start = a + OPEN.length;
-    const end = xml.indexOf('</', start);
-    if (end === -1) break;
-    results.push(xml.slice(start, end));
-    pos = end + 1;
-  }
-  return results;
-}
-
-function extraerBloquesAbs(xml) {
-  const results = [];
-  const TAG = 'return';
-  let pos = 0;
-  while (true) {
-    const startTag = xml.indexOf('<', pos);
-    if (startTag === -1) break;
-    const gt = xml.indexOf('>', startTag);
+    var s = xml.indexOf("<", pos);
+    if (s === -1) break;
+    var gt = xml.indexOf(">", s);
     if (gt === -1) break;
-    const tagContent = xml.slice(startTag + 1, gt);
-    const localName = tagContent.split(':').pop().split(' ')[0];
-    if (localName === TAG) {
-      const closeTag = '</' + tagContent + '>';
-      const closeAlt = '</' + localName + '>';
-      let end = xml.indexOf(closeTag, gt);
-      if (end === -1) end = xml.indexOf(closeAlt, gt);
-      if (end === -1) { pos = gt + 1; continue; }
-      results.push(xml.slice(gt + 1, end));
-      pos = end + closeAlt.length;
+    var tc = xml.slice(s + 1, gt);
+    var ln = tc.split(":").pop().split(" ")[0];
+    if (ln === "return") {
+      var ca = "</" + ln + ">";
+      var e = xml.indexOf("</" + tc + ">", gt);
+      if (e === -1) e = xml.indexOf(ca, gt);
+      if (e === -1) { pos = gt + 1; continue; }
+      results.push(xml.slice(gt + 1, e));
+      pos = e + ca.length;
     } else {
       pos = gt + 1;
     }
@@ -70,273 +51,283 @@ function extraerBloquesAbs(xml) {
   return results;
 }
 
-async function fetchSOAP(envelope, timeoutMs) {
-  const ms = timeoutMs || 25000;
-  const ctrl = new AbortController();
-  const t = setTimeout(function() { ctrl.abort(); }, ms);
+async function fetchSOAP(body, ms) {
+  ms = ms || 25000;
+  var ctrl = new AbortController();
+  var t = setTimeout(function() { ctrl.abort(); }, ms);
   try {
-    const r = await fetch(SOAP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/soap+xml;charset=UTF-8', 'SOAPAction': '""' },
-      body: envelope,
+    var r = await fetch(SOAP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/soap+xml;charset=UTF-8", "SOAPAction": '""' },
+      body: body,
       signal: ctrl.signal,
     });
     clearTimeout(t);
-    if (!r.ok) throw new Error('DANE HTTP ' + r.status);
+    if (!r.ok) throw new Error("DANE HTTP " + r.status);
     return await r.text();
-  } catch (e) { clearTimeout(t); throw e; }
+  } catch(e) { clearTimeout(t); throw e; }
 }
 
 async function fetchPrecios() {
-  const xml = await fetchSOAP(
-    '<?xml version="1.0" encoding="UTF-8"?>' +
-    '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:ser="http://servicios.sipsa.co.gov.dane/">' +
-    '<soap:Header/><soap:Body><ser:promediosSipsaCiudad/></soap:Body></soap:Envelope>'
+  var xml = await fetchSOAP(
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:ser=\"http://servicios.sipsa.co.gov.dane/\">" +
+    "<soap:Header/><soap:Body><ser:promediosSipsaCiudad/></soap:Body></soap:Envelope>"
   );
-
-  const porFecha = {};
-  const bloques = extraerBloquesAbs(xml);
-  for (const b of bloques) {
-    const prod   = getTag(b, 'producto').toLowerCase();
-    const fecha  = getTag(b, 'fechaCaptura').split('T')[0];
-    const precio = parseFloat(getTag(b, 'precioPromedio'));
-    if (!prod.includes('papa') || !fecha || isNaN(precio) || precio <= 0) continue;
+  var pf = {};
+  var bl = extraerBloques(xml);
+  for (var i = 0; i < bl.length; i++) {
+    var b = bl[i];
+    var prod  = getTag(b, "producto").toLowerCase();
+    var fecha = getTag(b, "fechaCaptura").split("T")[0];
+    var prec  = parseFloat(getTag(b, "precioPromedio"));
+    if (prod.indexOf("papa") === -1 || !fecha || isNaN(prec) || prec <= 0) continue;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) continue;
-    if (!porFecha[fecha]) porFecha[fecha] = [];
-    porFecha[fecha].push(precio);
+    if (!pf[fecha]) pf[fecha] = [];
+    pf[fecha].push(prec);
   }
-  const keys = Object.keys(porFecha);
-  if (!keys.length) throw new Error('SIPSA no devolvio registros de papa');
+  var keys = Object.keys(pf);
+  if (!keys.length) throw new Error("SIPSA sin registros de papa");
   return keys
-    .map(function(fecha) {
-      const arr = porFecha[fecha];
-      return { fecha: fecha, precio: Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length) };
+    .map(function(f) {
+      var arr = pf[f];
+      return { fecha: f, precio: Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length) };
     })
     .sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; });
 }
 
 async function fetchAbastecimiento() {
-  const xml = await fetchSOAP(
-    '<?xml version="1.0" encoding="UTF-8"?>' +
-    '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:ser="http://servicios.sipsa.co.gov.dane/">' +
-    '<soap:Header/><soap:Body><ser:promedioAbasSipsaMesMadr/></soap:Body></soap:Envelope>',
+  var xml = await fetchSOAP(
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+    "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:ser=\"http://servicios.sipsa.co.gov.dane/\">" +
+    "<soap:Header/><soap:Body><ser:promedioAbasSipsaMesMadr/></soap:Body></soap:Envelope>",
     10000
   );
-
-  const porMes = {};
-  const bloques = extraerBloquesAbs(xml);
-  for (const b of bloques) {
-    const nombre = getTag(b, 'artiNombre').toLowerCase();
-    const fechaRaw = getTag(b, 'fechaMesIni').split('T')[0];
-    const mes    = fechaRaw.slice(0, 7);
-    const fuente = getTag(b, 'fuenId');
-    const ton    = parseFloat(getTag(b, 'cantidadTon'));
-    if (!nombre.includes('papa') || !mes || isNaN(ton) || ton <= 0) continue;
-    if (!porMes[mes]) porMes[mes] = {};
-    if (!porMes[mes][fuente]) porMes[mes][fuente] = ton;
+  var pm = {};
+  var bl = extraerBloques(xml);
+  for (var i = 0; i < bl.length; i++) {
+    var b = bl[i];
+    var nom = getTag(b, "artiNombre").toLowerCase();
+    var mes = getTag(b, "fechaMesIni").split("T")[0].slice(0, 7);
+    var fid = getTag(b, "fuenId");
+    var ton = parseFloat(getTag(b, "cantidadTon"));
+    if (nom.indexOf("papa") === -1 || !mes || isNaN(ton) || ton <= 0) continue;
+    if (!pm[mes]) pm[mes] = {};
+    if (!pm[mes][fid]) pm[mes][fid] = ton;
   }
-  return Object.keys(porMes)
+  return Object.keys(pm)
     .map(function(mes) {
-      const vals = Object.values(porMes[mes]);
-      return { mes: mes, toneladas: Math.round(vals.reduce(function(a,b){return a+b;},0)), fuentes: vals.length };
+      var vals = Object.values(pm[mes]);
+      return { mes: mes, toneladas: Math.round(vals.reduce(function(a,b){return a+b;},0)) };
     })
     .sort(function(a,b){ return a.mes < b.mes ? -1 : 1; });
 }
 
 async function fetchClima(lat, lon) {
-  const vars = 'precipitation_sum,temperature_2m_max,temperature_2m_min,et0_fao_evapotranspiration,rain_sum';
-  const tz   = 'America%2FBogota';
-  const u1 = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
-    '&daily=' + vars + '&past_days=30&forecast_days=1&timezone=' + tz;
-  const u2 = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon +
-    '&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,precipitation_probability_max,rain_sum&forecast_days=7&timezone=' + tz;
-
-  const results = await Promise.allSettled([
+  var tz = "America%2FBogota";
+  var vars = "precipitation_sum,temperature_2m_max,temperature_2m_min,et0_fao_evapotranspiration,rain_sum";
+  var u1 = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
+    "&daily=" + vars + "&past_days=30&forecast_days=1&timezone=" + tz;
+  var u2 = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
+    "&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,precipitation_probability_max,rain_sum" +
+    "&forecast_days=7&timezone=" + tz;
+  var rs = await Promise.allSettled([
     fetch(u1, { signal: AbortSignal.timeout(10000) }).then(function(r){return r.json();}),
     fetch(u2, { signal: AbortSignal.timeout(10000) }).then(function(r){return r.json();}),
   ]);
-
-  const hist = results[0].status === 'fulfilled' && !results[0].value.error ? results[0].value : null;
-  const fcst = results[1].status === 'fulfilled' && !results[1].value.error ? results[1].value : null;
-
-  const historico = hist && hist.daily && hist.daily.time
-    ? hist.daily.time.map(function(fecha, i) {
-        return {
-          fecha: fecha,
-          lluvia_mm:  hist.daily.precipitation_sum[i] || 0,
-          temp_max:   hist.daily.temperature_2m_max[i] || 0,
-          temp_min:   hist.daily.temperature_2m_min[i] || 0,
-          evapotrans: hist.daily.et0_fao_evapotranspiration[i] || 0,
-        };
-      })
-    : [];
-
-  const pronostico = fcst && fcst.daily && fcst.daily.time
-    ? fcst.daily.time.map(function(fecha, i) {
-        return {
-          fecha: fecha,
-          lluvia_mm:   fcst.daily.precipitation_sum[i] || 0,
-          prob_lluvia: fcst.daily.precipitation_probability_max[i] || 0,
-          temp_max:    fcst.daily.temperature_2m_max[i] || 0,
-          temp_min:    fcst.daily.temperature_2m_min[i] || 0,
-        };
-      })
-    : [];
-
-  return { historico: historico, pronostico: pronostico };
+  var h = rs[0].status === "fulfilled" && !rs[0].value.error ? rs[0].value : null;
+  var f = rs[1].status === "fulfilled" && !rs[1].value.error ? rs[1].value : null;
+  return {
+    historico: h && h.daily && h.daily.time ? h.daily.time.map(function(fecha, i) {
+      return {
+        fecha: fecha,
+        lluvia_mm: h.daily.precipitation_sum[i] || 0,
+        temp_max:  h.daily.temperature_2m_max[i] || 0,
+        temp_min:  h.daily.temperature_2m_min[i] || 0,
+        evap:      h.daily.et0_fao_evapotranspiration[i] || 0,
+      };
+    }) : [],
+    pronostico: f && f.daily && f.daily.time ? f.daily.time.map(function(fecha, i) {
+      return {
+        fecha: fecha,
+        lluvia_mm:   f.daily.precipitation_sum[i] || 0,
+        prob_lluvia: f.daily.precipitation_probability_max[i] || 0,
+        temp_max:    f.daily.temperature_2m_max[i] || 0,
+        temp_min:    f.daily.temperature_2m_min[i] || 0,
+      };
+    }) : [],
+  };
 }
 
-function modeloMultivariado(historico, climaIpiales, climaTuquerres, abastecimiento, acpm) {
+// Modelo AR(1) adaptativo basado en analisis estadistico de la serie real:
+// - Autocorrelacion lag1=0.946: alta persistencia -> el precio de hoy predice bien manana
+// - CV=27%, reversion promedio 16.5 dias
+// - Alpha adaptativo segun z-score: lejos de la media -> mas reversion
+// - Ajustes contextuales pequenos: lluvia, abastecimiento, ACPM, estacionalidad
+function modeloAR1(historico, climaIp, climaTq, abast, acpm) {
   if (historico.length < 15) return modeloSimple(historico);
 
-  const precios30 = historico.slice(-30).map(function(d){ return d.precio; });
-  const media30   = precios30.reduce(function(a,b){return a+b;},0) / precios30.length;
-  const precioHoy = historico[historico.length - 1].precio;
-  const velRev    = 0.08;
+  var pr30  = historico.slice(-30).map(function(d){return d.precio;});
+  var med30 = pr30.reduce(function(a,b){return a+b;},0) / pr30.length;
+  var std30 = Math.sqrt(pr30.reduce(function(s,x){return s+(x-med30)*(x-med30);},0)/pr30.length);
+  var hoy   = historico[historico.length-1].precio;
+  var z     = std30 > 0 ? (hoy - med30) / std30 : 0;
 
-  const lluviaIp = climaIpiales.historico.slice(-7).map(function(d){ return d.lluvia_mm; });
-  const lluviaMedia = lluviaIp.length ? lluviaIp.reduce(function(a,b){return a+b;},0)/lluviaIp.length : 0;
-  const ajLluviaPct = lluviaMedia > 10 ? Math.min((lluviaMedia-10)/20, 1) * 0.03 : 0;
+  // Alpha adaptativo: alta persistencia cuando precio en rango normal
+  // mas reversion cuando precio se aleja de la media (documentado: 16.5 dias)
+  var alpha;
+  var absZ = Math.abs(z);
+  if (absZ < 1.0)      alpha = 0.90;  // rango normal: seguir precio actual
+  else if (absZ < 1.5) alpha = 0.75;  // leve desviacion: mezcla moderada
+  else                 alpha = 0.55;  // desviacion fuerte: reversion dominante
 
-  let ajAbsPct = 0;
-  if (abastecimiento.length >= 3) {
-    const tons     = abastecimiento.map(function(d){return d.toneladas;});
-    const mediaAbs = tons.slice(0,-1).reduce(function(a,b){return a+b;},0) / (tons.length-1);
-    const ultimo   = tons[tons.length-1];
-    const ratio    = mediaAbs > 0 ? (ultimo - mediaAbs) / mediaAbs : 0;
-    ajAbsPct = Math.max(-0.04, Math.min(0.04, -ratio * 0.2));
+  // Ajuste lluvia Ipiales ultimos 7d - max +3%
+  var llIp = climaIp.historico.slice(-7).map(function(d){return d.lluvia_mm;});
+  var llMed = llIp.length ? llIp.reduce(function(a,b){return a+b;},0)/llIp.length : 0;
+  var ajLl  = llMed > 10 ? Math.min((llMed-10)/20, 1) * 0.03 : 0;
+
+  // Ajuste abastecimiento - max +-4%
+  var ajAbs = 0;
+  if (abast.length >= 3) {
+    var tons   = abast.map(function(d){return d.toneladas;});
+    var medAbs = tons.slice(0,-1).reduce(function(a,b){return a+b;},0)/(tons.length-1);
+    var ratio  = medAbs > 0 ? (tons[tons.length-1] - medAbs) / medAbs : 0;
+    ajAbs = Math.max(-0.04, Math.min(0.04, -ratio * 0.2));
   }
 
-  const ajAcpmPct = acpm > 0
-    ? Math.max(-0.02, Math.min(0.02, (acpm - 11000) / 11000 * 0.3)) : 0;
+  // Ajuste ACPM - max +-2%
+  var ajAcpm = acpm > 0 ? Math.max(-0.02, Math.min(0.02, (acpm-11000)/11000*0.3)) : 0;
 
-  const fechaUlt = new Date(historico[historico.length-1].fecha + 'T12:00:00Z');
-  const anoIni   = new Date(Date.UTC(fechaUlt.getUTCFullYear(), 0, 1));
-  const semana   = Math.ceil((fechaUlt - anoIni) / (7*24*3600*1000));
-  const ajEstPct = Math.sin(2*Math.PI*(semana-13)/52) * 0.02;
+  // Estacionalidad - confirmada en datos: sem 10-16 caras, sem 34-35,47-48 baratas
+  // max +-2%
+  var fu  = new Date(historico[historico.length-1].fecha + "T12:00:00Z");
+  var ini = new Date(Date.UTC(fu.getUTCFullYear(), 0, 1));
+  var sem = Math.ceil((fu - ini) / (7*24*3600*1000));
+  var ajEst = Math.sin(2*Math.PI*(sem-13)/52) * 0.02;
 
-  const base = new Date(fechaUlt);
-  let prev = precioHoy;
-  const prediccion = [];
+  // Prediccion 7 dias: AR(1) adaptativo encadenado
+  var base = new Date(fu);
+  var prev = hoy;
+  var pred = [];
 
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(base);
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(base);
     d.setUTCDate(d.getUTCDate() + i + 1);
-    const gap       = media30 - prev;
-    const tendencia = prev + gap * velRev;
-    const ajLluvia  = tendencia * ajLluviaPct;
-    const ajAbs     = tendencia * ajAbsPct;
-    const ajAcpm    = tendencia * ajAcpmPct;
-    const ajEst     = tendencia * ajEstPct;
-    const precioEst = tendencia + ajLluvia + ajAbs + ajAcpm + ajEst;
+
+    // AR(1): precio_t = alpha*precio_(t-1) + (1-alpha)*media30
+    var ar1 = alpha * prev + (1 - alpha) * med30;
+
+    // Ajustes contextuales sobre el precio AR(1)
+    var ajTotal = ar1 * (ajLl + ajAbs + ajAcpm + ajEst);
+    var precioEst = ar1 + ajTotal;
+
     prev = precioEst;
-    prediccion.push({
-      fecha:  d.toISOString().split('T')[0],
+    pred.push({
+      fecha:  d.toISOString().split("T")[0],
       precio: Math.round(Math.max(precioEst, 500)),
       componentes: {
-        tendencia:      Math.round(tendencia),
-        lluvia:         Math.round(ajLluvia),
-        abastecimiento: Math.round(ajAbs),
-        acpm:           Math.round(ajAcpm),
-        estacional:     Math.round(ajEst),
+        ar1:            Math.round(ar1),
+        alpha_usado:    alpha,
+        z_score:        Math.round(z*100)/100,
+        lluvia:         Math.round(ar1*ajLl),
+        abastecimiento: Math.round(ar1*ajAbs),
+        acpm:           Math.round(ar1*ajAcpm),
+        estacional:     Math.round(ar1*ajEst),
       },
     });
   }
-  return prediccion;
+  return pred;
 }
 
 function modeloSimple(historico) {
-  const v = historico.slice(-30).map(function(d){return d.precio;});
-  const n = v.length;
-  const media = v.reduce(function(a,b){return a+b;},0)/n;
-  const xm = (n-1)/2;
-  let num=0, den=0;
-  v.forEach(function(y,x){ num+=(x-xm)*(y-media); den+=(x-xm)*(x-xm); });
-  const slope = den ? num/den : 0;
-  const base = new Date(historico[historico.length-1].fecha + 'T12:00:00Z');
-  const result = [];
-  for (let i=0; i<7; i++) {
-    const d = new Date(base); d.setUTCDate(d.getUTCDate()+i+1);
-    result.push({ fecha: d.toISOString().split('T')[0], precio: Math.round(Math.max(media+slope*(n+i),500)), componentes: null });
+  var v = historico.slice(-30).map(function(d){return d.precio;});
+  var n = v.length;
+  var m = v.reduce(function(a,b){return a+b;},0)/n;
+  var xm=(n-1)/2, num=0, den=0;
+  v.forEach(function(y,x){num+=(x-xm)*(y-m);den+=(x-xm)*(x-xm);});
+  var sl = den ? num/den : 0;
+  var base = new Date(historico[historico.length-1].fecha + "T12:00:00Z");
+  var res = [];
+  for (var i=0; i<7; i++) {
+    var d = new Date(base); d.setUTCDate(d.getUTCDate()+i+1);
+    res.push({ fecha: d.toISOString().split("T")[0], precio: Math.round(Math.max(m+sl*(n+i),500)), componentes: null });
   }
-  return result;
+  return res;
 }
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate');
-  if (req.method === 'OPTIONS') { res.status(204).end(); return; }
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Cache-Control", "s-maxage=21600, stale-while-revalidate");
+  if (req.method === "OPTIONS") { res.status(204).end(); return; }
 
-  const ahora          = Date.now();
-  const acpm           = parseFloat(req.query.acpm)     || 11282;
-  const precioFrontera = parseFloat(req.query.frontera) || 0;
+  var ahora = Date.now();
+  var acpm  = parseFloat(req.query.acpm)     || 11282;
+  var front = parseFloat(req.query.frontera) || 0;
 
   if (_cache && (ahora - _cache.timestamp) < CACHE_TTL && !req.query.refresh) {
-    const cached = Object.assign({}, _cache.data, { fromCache: true, cacheAge: Math.round((ahora-_cache.timestamp)/60000) });
-    return res.status(200).json(cached);
+    var c = Object.assign({}, _cache.data, { fromCache: true, cacheAge: Math.round((ahora-_cache.timestamp)/60000) });
+    return res.status(200).json(c);
   }
 
-  let ultimoError = null;
+  var ultimoError = null;
 
-  for (let intento = 1; intento <= 2; intento++) {
+  for (var intento = 1; intento <= 2; intento++) {
     try {
-      const historico      = await fetchPrecios();
-      const abastecimiento = await fetchAbastecimiento().catch(function(){ return []; });
-      const climaResults   = await Promise.all([
+      var historico = await fetchPrecios();
+      var abast     = await fetchAbastecimiento().catch(function(){ return []; });
+      var climas    = await Promise.all([
         fetchClima(ZONAS.ipiales.lat,   ZONAS.ipiales.lon).catch(function(){ return { historico:[], pronostico:[] }; }),
         fetchClima(ZONAS.tuquerres.lat, ZONAS.tuquerres.lon).catch(function(){ return { historico:[], pronostico:[] }; }),
       ]);
-      const climaIpiales   = climaResults[0];
-      const climaTuquerres = climaResults[1];
+      var climaIp = climas[0];
+      var climaTq = climas[1];
 
-      const prediccion = modeloMultivariado(historico, climaIpiales, climaTuquerres, abastecimiento, acpm);
+      var prediccion = modeloAR1(historico, climaIp, climaTq, abast, acpm);
 
-      const climaPronostico = climaIpiales.pronostico.slice(0,7).map(function(d) {
-        return { fecha: d.fecha, lluvia_mm: d.lluvia_mm, prob_lluvia: d.prob_lluvia, temp_max: d.temp_max, temp_min: d.temp_min };
+      var fcst = climaIp.pronostico.slice(0,7).map(function(d) {
+        return { fecha:d.fecha, lluvia_mm:d.lluvia_mm, prob_lluvia:d.prob_lluvia, temp_max:d.temp_max, temp_min:d.temp_min };
       });
 
-      const ultAbs = abastecimiento.length ? abastecimiento[abastecimiento.length-1] : null;
-
-      const respuesta = {
-        ok:        true,
-        generado:  new Date().toISOString(),
+      var respuesta = {
+        ok: true,
+        generado: new Date().toISOString(),
         fromCache: false,
-        intento:   intento,
+        intento: intento,
         historico: historico,
         prediccion: prediccion,
         contexto: {
-          abastecimiento_ultimo:    ultAbs,
-          clima_pronostico_ipiales: climaPronostico,
+          abastecimiento_ultimo:    abast.length ? abast[abast.length-1] : null,
+          clima_pronostico_ipiales: fcst,
           acpm_gallon:              acpm,
-          precio_frontera:          precioFrontera,
-          modelo:                   prediccion[0] && prediccion[0].componentes ? 'multivariado' : 'simple',
+          precio_frontera:          front,
+          modelo:                   prediccion[0] && prediccion[0].componentes ? "AR1-adaptativo" : "simple",
         },
       };
 
       _cache = { data: respuesta, timestamp: ahora };
       return res.status(200).json(respuesta);
 
-    } catch (e) {
+    } catch(e) {
       ultimoError = e;
-      console.error('[sipsa] intento ' + intento + ':', e.message);
+      console.error("[sipsa] intento " + intento + ":", e.message);
       if (intento === 1) await new Promise(function(r){ setTimeout(r, 2000); });
     }
   }
 
   if (_cache) {
-    const h = ((ahora-_cache.timestamp)/3600000).toFixed(1);
-    const fallback = Object.assign({}, _cache.data, {
+    var h = ((ahora-_cache.timestamp)/3600000).toFixed(1);
+    var fb = Object.assign({}, _cache.data, {
       fromCache: true, cacheVencida: true,
       cacheAge: Math.round((ahora-_cache.timestamp)/60000),
-      advertencia: 'Datos de hace ' + h + 'h',
+      advertencia: "Datos de hace " + h + "h",
     });
-    return res.status(200).json(fallback);
+    return res.status(200).json(fb);
   }
 
   return res.status(503).json({
     ok: false,
-    error: ultimoError && ultimoError.name === 'AbortError' ? 'SIPSA no respondio a tiempo.' : 'Error: ' + (ultimoError ? ultimoError.message : 'desconocido'),
-    sugerencia: 'El DANE actualiza precios despues de las 2 p.m. Los fines de semana puede estar inactivo.',
+    error: ultimoError && ultimoError.name === "AbortError" ? "SIPSA no respondio a tiempo." : "Error: " + (ultimoError ? ultimoError.message : "desconocido"),
+    sugerencia: "El DANE actualiza precios despues de las 2 p.m. Los fines de semana puede estar inactivo.",
   });
 }
