@@ -1,10 +1,13 @@
-// api/sipsa.js
+// api/sipsa.js - Modelo AR(1) adaptativo corregido
+// Basado en analisis estadistico real de serie SIPSA 1332 dias:
+// - Autocorrelacion lag1=0.946: alta persistencia
+// - CV=27%, reversion promedio 16.5 dias
+// - Alpha adaptativo por z-score, ajustes contextuales NO encadenados
 export const config = { maxDuration: 60 };
 
 var _cache = null;
 var CACHE_TTL = 6 * 60 * 60 * 1000;
 var SOAP_URL = "https://appweb.dane.gov.co/sipsaWS/SrvSipsaUpraBeanService";
-
 var ZONAS = {
   ipiales:   { lat: 0.8304,  lon: -77.6441 },
   tuquerres: { lat: 1.0833,  lon: -77.6167 },
@@ -124,7 +127,7 @@ async function fetchAbastecimiento() {
 }
 
 async function fetchClima(lat, lon) {
-  var tz = "America%2FBogota";
+  var tz   = "America%2FBogota";
   var vars = "precipitation_sum,temperature_2m_max,temperature_2m_min,et0_fao_evapotranspiration,rain_sum";
   var u1 = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
     "&daily=" + vars + "&past_days=30&forecast_days=1&timezone=" + tz;
@@ -139,31 +142,19 @@ async function fetchClima(lat, lon) {
   var f = rs[1].status === "fulfilled" && !rs[1].value.error ? rs[1].value : null;
   return {
     historico: h && h.daily && h.daily.time ? h.daily.time.map(function(fecha, i) {
-      return {
-        fecha: fecha,
-        lluvia_mm: h.daily.precipitation_sum[i] || 0,
-        temp_max:  h.daily.temperature_2m_max[i] || 0,
-        temp_min:  h.daily.temperature_2m_min[i] || 0,
-        evap:      h.daily.et0_fao_evapotranspiration[i] || 0,
-      };
+      return { fecha: fecha, lluvia_mm: h.daily.precipitation_sum[i] || 0,
+        temp_max: h.daily.temperature_2m_max[i] || 0, temp_min: h.daily.temperature_2m_min[i] || 0 };
     }) : [],
     pronostico: f && f.daily && f.daily.time ? f.daily.time.map(function(fecha, i) {
-      return {
-        fecha: fecha,
-        lluvia_mm:   f.daily.precipitation_sum[i] || 0,
+      return { fecha: fecha, lluvia_mm: f.daily.precipitation_sum[i] || 0,
         prob_lluvia: f.daily.precipitation_probability_max[i] || 0,
-        temp_max:    f.daily.temperature_2m_max[i] || 0,
-        temp_min:    f.daily.temperature_2m_min[i] || 0,
-      };
+        temp_max: f.daily.temperature_2m_max[i] || 0, temp_min: f.daily.temperature_2m_min[i] || 0 };
     }) : [],
   };
 }
 
-// Modelo AR(1) adaptativo basado en analisis estadistico de la serie real:
-// - Autocorrelacion lag1=0.946: alta persistencia -> el precio de hoy predice bien manana
-// - CV=27%, reversion promedio 16.5 dias
-// - Alpha adaptativo segun z-score: lejos de la media -> mas reversion
-// - Ajustes contextuales pequenos: lluvia, abastecimiento, ACPM, estacionalidad
+// AR(1) adaptativo - CORRECCION: ajustes calculados una sola vez desde precio HOY
+// no se acumulan en cada iteracion para evitar divergencia
 function modeloAR1(historico, climaIp, climaTq, abast, acpm) {
   if (historico.length < 15) return modeloSimple(historico);
 
@@ -172,21 +163,18 @@ function modeloAR1(historico, climaIp, climaTq, abast, acpm) {
   var std30 = Math.sqrt(pr30.reduce(function(s,x){return s+(x-med30)*(x-med30);},0)/pr30.length);
   var hoy   = historico[historico.length-1].precio;
   var z     = std30 > 0 ? (hoy - med30) / std30 : 0;
+  var absZ  = Math.abs(z);
 
-  // Alpha adaptativo: alta persistencia cuando precio en rango normal
-  // mas reversion cuando precio se aleja de la media (documentado: 16.5 dias)
-  var alpha;
-  var absZ = Math.abs(z);
-  if (absZ < 1.0)      alpha = 0.90;  // rango normal: seguir precio actual
-  else if (absZ < 1.5) alpha = 0.75;  // leve desviacion: mezcla moderada
-  else                 alpha = 0.55;  // desviacion fuerte: reversion dominante
+  // Alpha: persistencia alta en rango normal, reversion cuando se aleja
+  // Calibrado sobre reversion promedio observada de 16.5 dias
+  var alpha = absZ < 1.0 ? 0.90 : absZ < 1.5 ? 0.75 : 0.55;
 
-  // Ajuste lluvia Ipiales ultimos 7d - max +3%
+  // Ajustes contextuales - calculados UNA SOLA VEZ sobre precio actual
+  // Son perturbaciones fijas, no se amplifican en cada paso
   var llIp = climaIp.historico.slice(-7).map(function(d){return d.lluvia_mm;});
   var llMed = llIp.length ? llIp.reduce(function(a,b){return a+b;},0)/llIp.length : 0;
-  var ajLl  = llMed > 10 ? Math.min((llMed-10)/20, 1) * 0.03 : 0;
+  var ajLl = llMed > 10 ? Math.min((llMed-10)/20, 1) * 0.03 : 0;
 
-  // Ajuste abastecimiento - max +-4%
   var ajAbs = 0;
   if (abast.length >= 3) {
     var tons   = abast.map(function(d){return d.toneladas;});
@@ -195,17 +183,18 @@ function modeloAR1(historico, climaIp, climaTq, abast, acpm) {
     ajAbs = Math.max(-0.04, Math.min(0.04, -ratio * 0.2));
   }
 
-  // Ajuste ACPM - max +-2%
   var ajAcpm = acpm > 0 ? Math.max(-0.02, Math.min(0.02, (acpm-11000)/11000*0.3)) : 0;
 
-  // Estacionalidad - confirmada en datos: sem 10-16 caras, sem 34-35,47-48 baratas
-  // max +-2%
   var fu  = new Date(historico[historico.length-1].fecha + "T12:00:00Z");
   var ini = new Date(Date.UTC(fu.getUTCFullYear(), 0, 1));
   var sem = Math.ceil((fu - ini) / (7*24*3600*1000));
   var ajEst = Math.sin(2*Math.PI*(sem-13)/52) * 0.02;
 
-  // Prediccion 7 dias: AR(1) adaptativo encadenado
+  // Perturbacion contextual total - aplicada una vez, constante para todos los dias
+  var perturbacion = hoy * (ajLl + ajAbs + ajAcpm + ajEst);
+
+  // Prediccion: AR(1) puro encadenado + perturbacion fija
+  // AR(1) converge naturalmente a med30 sin diverger
   var base = new Date(fu);
   var prev = hoy;
   var pred = [];
@@ -214,25 +203,23 @@ function modeloAR1(historico, climaIp, climaTq, abast, acpm) {
     var d = new Date(base);
     d.setUTCDate(d.getUTCDate() + i + 1);
 
-    // AR(1): precio_t = alpha*precio_(t-1) + (1-alpha)*media30
+    // AR(1) puro: converge a med30 a tasa (1-alpha) por periodo
     var ar1 = alpha * prev + (1 - alpha) * med30;
 
-    // Ajustes contextuales sobre el precio AR(1)
-    var ajTotal = ar1 * (ajLl + ajAbs + ajAcpm + ajEst);
-    var precioEst = ar1 + ajTotal;
+    // Perturbacion contextual: se amortigua con la distancia (menos certeza)
+    var factorAmort = Math.exp(-0.15 * i);
+    var precioEst = ar1 + perturbacion * factorAmort;
 
-    prev = precioEst;
+    prev = ar1; // encadenar solo el AR(1), no la perturbacion
+
     pred.push({
       fecha:  d.toISOString().split("T")[0],
       precio: Math.round(Math.max(precioEst, 500)),
       componentes: {
         ar1:            Math.round(ar1),
-        alpha_usado:    alpha,
+        alpha:          alpha,
         z_score:        Math.round(z*100)/100,
-        lluvia:         Math.round(ar1*ajLl),
-        abastecimiento: Math.round(ar1*ajAbs),
-        acpm:           Math.round(ar1*ajAcpm),
-        estacional:     Math.round(ar1*ajEst),
+        perturbacion:   Math.round(perturbacion * factorAmort),
       },
     });
   }
@@ -280,22 +267,15 @@ export default async function handler(req, res) {
         fetchClima(ZONAS.ipiales.lat,   ZONAS.ipiales.lon).catch(function(){ return { historico:[], pronostico:[] }; }),
         fetchClima(ZONAS.tuquerres.lat, ZONAS.tuquerres.lon).catch(function(){ return { historico:[], pronostico:[] }; }),
       ]);
-      var climaIp = climas[0];
-      var climaTq = climas[1];
 
-      var prediccion = modeloAR1(historico, climaIp, climaTq, abast, acpm);
-
-      var fcst = climaIp.pronostico.slice(0,7).map(function(d) {
+      var prediccion = modeloAR1(historico, climas[0], climas[1], abast, acpm);
+      var fcst = climas[0].pronostico.slice(0,7).map(function(d) {
         return { fecha:d.fecha, lluvia_mm:d.lluvia_mm, prob_lluvia:d.prob_lluvia, temp_max:d.temp_max, temp_min:d.temp_min };
       });
 
       var respuesta = {
-        ok: true,
-        generado: new Date().toISOString(),
-        fromCache: false,
-        intento: intento,
-        historico: historico,
-        prediccion: prediccion,
+        ok: true, generado: new Date().toISOString(), fromCache: false, intento: intento,
+        historico: historico, prediccion: prediccion,
         contexto: {
           abastecimiento_ultimo:    abast.length ? abast[abast.length-1] : null,
           clima_pronostico_ipiales: fcst,
