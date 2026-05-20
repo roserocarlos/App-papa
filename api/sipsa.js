@@ -81,10 +81,16 @@ async function fetchPrecios() {
   var bl = extraerBloques(xml);
   for (var i = 0; i < bl.length; i++) {
     var b = bl[i];
-    var prod  = getTag(b, "producto").toLowerCase();
-    var fecha = getTag(b, "fechaCaptura").split("T")[0];
-    var prec  = parseFloat(getTag(b, "precioPromedio"));
-    if (prod.indexOf("papa") === -1 || !fecha || isNaN(prec) || prec <= 0) continue;
+    var prod   = getTag(b, "producto").toLowerCase();
+    var ciudad = getTag(b, "ciudad").toLowerCase();
+    var fecha  = getTag(b, "fechaCaptura").split("T")[0];
+    var prec   = parseFloat(getTag(b, "precioPromedio"));
+    // Filtro: solo "Papa negra" (variedad dominante en Narino) en PASTO
+    // Pasto es la unica central mayorista SIPSA cercana a Ipiales
+    // Se excluye Papa criolla (diferente cultivo) y ciudades lejanas
+    var esPapaNegra = prod.indexOf("papa negra") !== -1;
+    var esPasto     = ciudad.indexOf("pasto") !== -1;
+    if (!esPapaNegra || !esPasto || !fecha || isNaN(prec) || prec <= 0) continue;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) continue;
     if (!pf[fecha]) pf[fecha] = [];
     pf[fecha].push(prec);
