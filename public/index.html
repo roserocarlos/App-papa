@@ -9,451 +9,514 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
-:root {
-  --bg:#f5f7f2; --sur:#ffffff; --sur2:#eef1ea; --bor:#d4dace;
-  --verde:#2d6a4f; --verde2:#52b788; --ocre:#c77b2e;
-  --rojo:#b5363a; --txt:#1c2b1e; --dim:#6b7d6e;
-  --mono:"IBM Plex Mono",monospace; --serif:"Source Serif 4",Georgia,serif;
+:root{
+  --bg:#f5f7f2;--sur:#fff;--sur2:#eef1ea;--bor:#d4dace;
+  --verde:#2d6a4f;--v2:#52b788;--ocre:#c77b2e;--rojo:#b5363a;
+  --txt:#1c2b1e;--dim:#6b7d6e;
+  --mono:"IBM Plex Mono",monospace;--serif:"Source Serif 4",Georgia,serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--txt);font-family:var(--mono);min-height:100dvh;-webkit-font-smoothing:antialiased;}
-header{background:var(--verde);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;}
-.logo{width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.ht h1{font-family:var(--serif);font-size:clamp(1rem,4vw,1.25rem);font-weight:700;line-height:1.2;}
-.ht p{font-size:0.62rem;opacity:0.75;letter-spacing:0.08em;text-transform:uppercase;margin-top:2px;}
-.hbadge{margin-left:auto;font-size:0.58rem;text-align:right;opacity:0.7;line-height:1.8;flex-shrink:0;}
-.wrap{max-width:960px;margin:0 auto;padding:18px 14px 60px;}
 
-/* BANNER */
-#banner{display:none;margin-bottom:12px;padding:9px 13px;border-radius:6px;font-size:0.7rem;line-height:1.5;border-left:3px solid;}
+header{background:var(--verde);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;}
+.logo{width:36px;height:36px;background:rgba(255,255,255,.15);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ht h1{font-family:var(--serif);font-size:clamp(.95rem,4vw,1.2rem);font-weight:700;line-height:1.2;}
+.ht p{font-size:.6rem;opacity:.75;letter-spacing:.08em;text-transform:uppercase;margin-top:2px;}
+.hbadge{margin-left:auto;font-size:.58rem;text-align:right;opacity:.75;line-height:1.8;}
+.confianza{display:inline-block;padding:1px 6px;border-radius:3px;font-size:.58rem;margin-top:2px;}
+.conf-alta{background:rgba(82,183,136,.3);}
+.conf-media{background:rgba(199,123,46,.3);}
+.conf-baja{background:rgba(181,54,58,.3);}
+
+.wrap{max-width:960px;margin:0 auto;padding:16px 14px 60px;}
+
+#banner{display:none;margin-bottom:12px;padding:9px 13px;border-radius:6px;font-size:.7rem;line-height:1.5;border-left:3px solid;}
 #banner.warn{background:#fef9ec;border-color:var(--ocre);color:#7a4a0a;}
 #banner.err{background:#fdf0f0;border-color:var(--rojo);color:#7a1c1e;}
+#banner.info{background:#eef7f2;border-color:var(--verde);color:#1a4a30;}
 
-/* KPI GRID */
 .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:14px;}
 @media(min-width:540px){.kpi-grid{grid-template-columns:repeat(4,1fr);}}
-.kpi{background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:12px 13px;border-top:3px solid var(--bor);opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s;}
+.kpi{background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:12px 13px;border-top:3px solid var(--bor);opacity:0;transform:translateY(5px);transition:opacity .3s,transform .3s;}
 .kpi.vis{opacity:1;transform:none;}
 .kpi.verde{border-top-color:var(--verde);}
 .kpi.ocre{border-top-color:var(--ocre);}
 .kpi.rojo{border-top-color:var(--rojo);}
-.kl{font-size:0.58rem;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);margin-bottom:5px;}
-.kv{font-family:var(--serif);font-size:clamp(1.1rem,3.5vw,1.5rem);font-weight:700;color:var(--txt);line-height:1;}
-.ks{font-size:0.6rem;color:var(--dim);margin-top:3px;}
+.kl{font-size:.58rem;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);margin-bottom:5px;}
+.kv{font-family:var(--serif);font-size:clamp(1.05rem,3.5vw,1.45rem);font-weight:700;color:var(--txt);line-height:1;}
+.ks{font-size:.58rem;color:var(--dim);margin-top:3px;}
 .kpi.ocre .kv{color:var(--ocre);}
 .kpi.verde .kv{color:var(--verde);}
 .kpi.rojo .kv{color:var(--rojo);}
 
-/* TOGGLE KG/BULTO */
-.toggle-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
-.toggle-label{font-size:0.65rem;color:var(--dim);}
-.toggle-btn{font-family:var(--mono);font-size:0.65rem;padding:5px 12px;border:1px solid var(--bor);border-radius:4px;background:var(--sur2);color:var(--dim);cursor:pointer;transition:all .15s;}
-.toggle-btn.act{background:var(--verde);color:#fff;border-color:var(--verde);}
+.toggle-row{display:flex;align-items:center;gap:7px;margin-bottom:11px;}
+.tlabel{font-size:.62rem;color:var(--dim);}
+.tbtn{font-family:var(--mono);font-size:.62rem;padding:4px 11px;border:1px solid var(--bor);border-radius:4px;background:var(--sur2);color:var(--dim);cursor:pointer;transition:all .15s;}
+.tbtn.act{background:var(--verde);color:#fff;border-color:var(--verde);}
 
-/* MAIN GRID */
-.main-grid{display:grid;grid-template-columns:1fr;gap:12px;}
-@media(min-width:700px){.main-grid{grid-template-columns:1fr 280px;}}
+.main-grid{display:grid;grid-template-columns:1fr;gap:11px;}
+@media(min-width:700px){.main-grid{grid-template-columns:1fr 270px;}}
 
-/* PANELS */
-.panel{background:var(--sur);border:1px solid var(--bor);border-radius:8px;overflow:hidden;margin-bottom:12px;}
-.ph{padding:10px 15px;border-bottom:1px solid var(--bor);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);background:var(--sur2);display:flex;align-items:center;gap:6px;}
-.ph .dot{width:7px;height:7px;border-radius:50%;background:var(--verde2);flex-shrink:0;animation:pulse 2s infinite;}
+.panel{background:var(--sur);border:1px solid var(--bor);border-radius:8px;overflow:hidden;margin-bottom:11px;}
+.ph{padding:10px 15px;border-bottom:1px solid var(--bor);font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);background:var(--sur2);display:flex;align-items:center;gap:6px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--v2);flex-shrink:0;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* VISTA HISTORICO */
-.vista-row{display:flex;gap:6px;padding:10px 15px 0;}
-.vbtn{font-family:var(--mono);font-size:0.62rem;padding:4px 10px;border:1px solid var(--bor);border-radius:3px;background:var(--sur2);color:var(--dim);cursor:pointer;transition:all .15s;}
+.vista-row{display:flex;gap:6px;padding:9px 14px 0;}
+.vbtn{font-family:var(--mono);font-size:.6rem;padding:4px 10px;border:1px solid var(--bor);border-radius:3px;background:var(--sur2);color:var(--dim);cursor:pointer;transition:all .15s;}
 .vbtn.act{background:var(--verde);color:#fff;border-color:var(--verde);}
 
-#chart{width:100%;height:320px;}
-@media(max-width:480px){#chart{height:250px;}}
+#chart{width:100%;height:300px;}
+@media(max-width:480px){#chart{height:240px;}}
 
-/* FUENTE LEGEND */
-.fuente-row{display:flex;gap:14px;padding:6px 15px;flex-wrap:wrap;}
-.fuente-item{font-size:0.6rem;color:var(--dim);display:flex;align-items:center;gap:4px;}
-.fc{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.fuente-row{display:flex;gap:12px;padding:6px 14px;flex-wrap:wrap;}
+.fi{font-size:.58rem;color:var(--dim);display:flex;align-items:center;gap:4px;}
+.fc{width:9px;height:9px;border-radius:50%;display:inline-block;}
 
-/* STATUS */
-#status{font-size:0.63rem;color:var(--dim);padding:8px 15px;border-top:1px solid var(--bor);display:flex;align-items:center;gap:6px;min-height:32px;}
+#status{font-size:.62rem;color:var(--dim);padding:7px 14px;border-top:1px solid var(--bor);display:flex;align-items:center;gap:6px;min-height:30px;}
 #status.ok{color:var(--verde);}
 #status.err{color:var(--rojo);}
 #status.warn{color:var(--ocre);}
 .sp{width:10px;height:10px;flex-shrink:0;border:2px solid var(--bor);border-top-color:var(--verde);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* PRED TABLE */
 .pt{width:100%;border-collapse:collapse;}
-.pt th{font-size:0.56rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);padding:7px 14px;text-align:left;border-bottom:1px solid var(--bor);}
-.pt td{padding:9px 14px;font-size:0.75rem;border-bottom:1px solid var(--bor);}
+.pt th{font-size:.56rem;text-transform:uppercase;letter-spacing:.05em;color:var(--dim);padding:7px 13px;text-align:left;border-bottom:1px solid var(--bor);}
+.pt td{padding:8px 13px;font-size:.73rem;border-bottom:1px solid var(--bor);}
 .pt tr:last-child td{border-bottom:none;}
 .pt tr:hover td{background:var(--sur2);}
 .dp{color:var(--rojo);}
 .dn{color:var(--verde);}
 .dz{color:var(--dim);}
+.margen{font-size:.58rem;color:var(--dim);}
 
-/* SIDE */
-.side-col{display:flex;flex-direction:column;gap:12px;}
+.side-col{display:flex;flex-direction:column;gap:11px;}
 
-/* CLIMA */
-.clima-dia{padding:8px 14px;border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;font-size:0.7rem;}
+/* -- Panel de consulta por fecha -- */
+.cuerpo-panel{padding:13px 14px;display:flex;flex-direction:column;gap:10px;}
+.field{display:flex;flex-direction:column;gap:3px;}
+.field label{font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);}
+.field input{font-family:var(--mono);font-size:.82rem;padding:7px 9px;border:1px solid var(--bor);border-radius:4px;background:var(--bg);color:var(--txt);width:100%;transition:border-color .2s;}
+.field input:focus{outline:none;border-color:var(--v2);}
+.field .hint{font-size:.57rem;color:var(--dim);}
+.bconsulta{font-family:var(--mono);font-size:.7rem;padding:8px 14px;background:var(--verde);color:white;border:none;border-radius:4px;cursor:pointer;width:100%;transition:background .2s;}
+.bconsulta:hover{background:#1f4d38;}
+.bconsulta:disabled{background:var(--dim);cursor:not-allowed;}
+
+/* -- Resultado consulta -- */
+.resultado-box{background:var(--sur2);border:1px solid var(--bor);border-radius:6px;padding:12px 13px;display:none;}
+.res-titulo{font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);margin-bottom:8px;}
+.res-precio{font-family:var(--serif);font-size:1.3rem;font-weight:700;color:var(--verde);}
+.res-margen{font-size:.62rem;color:var(--dim);margin-top:2px;}
+.res-real{margin-top:8px;padding-top:8px;border-top:1px solid var(--bor);}
+.res-real-titulo{font-size:.58rem;color:var(--dim);margin-bottom:4px;}
+.res-error{font-size:.72rem;font-weight:600;}
+.res-exacto{font-size:.65rem;color:var(--verde);margin-top:3px;}
+.res-base{font-size:.6rem;color:var(--dim);margin-top:6px;line-height:1.6;}
+
+/* -- Clima -- */
+.clima-dia{padding:7px 13px;border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;font-size:.68rem;}
 .clima-dia:last-child{border-bottom:none;}
-.cf{color:var(--dim);font-size:0.6rem;}
+.cf{color:var(--dim);font-size:.58rem;}
 .cll{color:#2176ae;font-weight:600;}
 
-/* INPUTS */
-.ig{padding:13px 14px;display:flex;flex-direction:column;gap:9px;}
-.field{display:flex;flex-direction:column;gap:3px;}
-.field label{font-size:0.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);}
-.field input{font-family:var(--mono);font-size:0.82rem;padding:7px 9px;border:1px solid var(--bor);border-radius:4px;background:var(--bg);color:var(--txt);width:100%;transition:border-color .2s;}
-.field input:focus{outline:none;border-color:var(--verde2);}
-.field .hint{font-size:0.57rem;color:var(--dim);}
-.bapl{font-family:var(--mono);font-size:0.7rem;padding:8px 14px;background:var(--verde);color:white;border:none;border-radius:4px;cursor:pointer;width:100%;transition:background .2s;}
-.bapl:hover{background:#1f4d38;}
-
-/* ACTIONS */
-.arow{display:flex;justify-content:flex-end;gap:7px;margin-top:3px;}
-.btn{font-family:var(--mono);font-size:0.62rem;padding:5px 11px;border-radius:4px;border:1px solid var(--bor);background:var(--sur2);color:var(--dim);cursor:pointer;transition:border-color .2s,color .2s;}
+.arow{display:flex;justify-content:flex-end;gap:7px;margin-top:2px;}
+.btn{font-family:var(--mono);font-size:.6rem;padding:5px 11px;border-radius:4px;border:1px solid var(--bor);background:var(--sur2);color:var(--dim);cursor:pointer;transition:border-color .2s,color .2s;}
 .btn:hover:not(:disabled){border-color:var(--verde);color:var(--verde);}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
 
-/* SK */
 .sk{background:linear-gradient(90deg,var(--sur2) 25%,#e8ede3 50%,var(--sur2) 75%);background-size:200% 100%;animation:sk 1.5s infinite;border-radius:3px;}
 @keyframes sk{to{background-position:-200% 0}}
-.note{font-size:0.58rem;color:var(--dim);text-align:center;margin-top:20px;line-height:2;}
+.note{font-size:.57rem;color:var(--dim);text-align:center;margin-top:18px;line-height:2;}
 .note a{color:var(--verde);text-decoration:none;}
 </style>
 </head>
 <body>
 <header>
-  <div class="logo">[Papa]</div>
+  <div class="logo">P</div>
   <div class="ht">
     <h1>AgroData IA</h1>
-    <p>Papa negra Ipiales - SIPSA-DANE + Acopio local</p>
+    <p>Papa negra - Ipiales / Pasto</p>
   </div>
-  <div class="hbadge" id="dotLive">* En vivo<br>Actualiz. diaria</div>
+  <div class="hbadge">
+    Datos: DANE-SIPSA + acopio local<br>
+    <span id="badgeConfianza"></span>
+  </div>
 </header>
 
 <div class="wrap">
   <div id="banner"></div>
 
-  <!-- TOGGLE KG / BULTO -->
   <div class="toggle-row">
-    <span class="toggle-label">Ver precios en:</span>
-    <button class="toggle-btn act" id="tKg" onclick="setUnidad('kg')">$/kg</button>
-    <button class="toggle-btn" id="tBulto" onclick="setUnidad('bulto')">$/bulto 50kg</button>
+    <span class="tlabel">Mostrar en:</span>
+    <button class="tbtn act" id="tKg" onclick="setUnidad('kg')">$ por kilo</button>
+    <button class="tbtn" id="tBulto" onclick="setUnidad('bulto')">$ por bulto (50 kg)</button>
   </div>
 
-  <!-- KPI -->
   <div class="kpi-grid">
     <div class="kpi verde" id="kHoy">
-      <div class="kl">Precio hoy</div>
+      <div class="kl">Ultimo precio</div>
       <div class="kv sk" style="height:24px;width:85%;">&nbsp;</div>
-      <div class="ks">Ipiales / Pasto</div>
+      <div class="ks">cargando...</div>
     </div>
     <div class="kpi" id="kMan">
-      <div class="kl">Manana (est.)</div>
+      <div class="kl">Manana</div>
       <div class="kv sk" style="height:24px;width:85%;">&nbsp;</div>
-      <div class="ks">-</div>
+      <div class="ks">estimado</div>
     </div>
     <div class="kpi" id="kTend">
-      <div class="kl">Tendencia 7d</div>
+      <div class="kl">En 7 dias</div>
       <div class="kv sk" style="height:24px;width:60%;">&nbsp;</div>
-      <div class="ks">-</div>
+      <div class="ks">estimado</div>
     </div>
-    <div class="kpi" id="kFuente">
-      <div class="kl">Fuente precio</div>
+    <div class="kpi" id="kDatos">
+      <div class="kl">Datos</div>
       <div class="kv sk" style="height:24px;width:70%;">&nbsp;</div>
-      <div class="ks">-</div>
+      <div class="ks">registros</div>
     </div>
   </div>
 
   <div class="main-grid">
     <div>
-      <!-- GRAFICA -->
       <div class="panel">
-        <div class="ph"><span class="dot"></span>Historico + Prediccion 7 dias</div>
+        <div class="ph"><span class="dot"></span>Precios registrados y estimacion 7 dias</div>
         <div class="vista-row">
-          <button class="vbtn act" id="v30" onclick="setVista(30)">30 dias</button>
+          <button class="vbtn act" id="v30" onclick="setVista(30)">Ultimo mes</button>
           <button class="vbtn" id="v90" onclick="setVista(90)">3 meses</button>
           <button class="vbtn" id="vAll" onclick="setVista(0)">Todo</button>
         </div>
         <div id="chart"></div>
         <div class="fuente-row">
-          <span class="fuente-item"><span class="fc" style="background:#2d6a4f;"></span>Acopio Ipiales</span>
-          <span class="fuente-item"><span class="fc" style="background:#52b788;"></span>DANE Pasto</span>
-          <span class="fuente-item"><span class="fc" style="background:#c77b2e;border:2px dashed #c77b2e;background:transparent;"></span>Prediccion</span>
+          <span class="fi"><span class="fc" style="background:#2d6a4f;"></span>Acopio Ipiales</span>
+          <span class="fi"><span class="fc" style="background:#52b788;"></span>DANE Pasto</span>
+          <span class="fi"><span class="fc" style="border:2px dashed #c77b2e;background:transparent;"></span>Estimacion</span>
         </div>
-        <div id="status"><div class="sp"></div>Consultando fuentes de datos...</div>
+        <div id="status"><div class="sp"></div>Consultando datos...</div>
       </div>
 
-      <!-- TABLA PREDICCION -->
       <div class="panel" id="predPanel" style="display:none;">
-        <div class="ph">Prediccion detallada - proximos 7 dias</div>
+        <div class="ph">Estimacion para los proximos 7 dias</div>
         <table class="pt">
-          <thead><tr><th>Dia</th><th>Fecha</th><th id="thPrecio">Precio est.</th><th>Bulto 50kg</th><th>Delta hoy</th></tr></thead>
+          <thead><tr><th>Dia</th><th>Fecha</th><th id="thKg">$/kg</th><th>$/bulto</th><th>Cambio</th><th>Margen</th></tr></thead>
           <tbody id="predBody"></tbody>
         </table>
       </div>
 
       <div class="arow">
-        <button class="btn" id="btnR" onclick="cargar(true)">Recargar</button>
-        <button class="btn" id="btnCsv" disabled>Descargar CSV</button>
+        <button class="btn" onclick="cargar(true)">Actualizar</button>
+        <button class="btn" id="btnCsv" disabled>Descargar datos</button>
       </div>
     </div>
 
-    <!-- LATERAL -->
     <div class="side-col">
-      <!-- CLIMA -->
-      <div class="panel" id="climaPanel" style="display:none;">
-        <div class="ph">Clima Ipiales - 7 dias</div>
-        <div id="climaBody"></div>
-      </div>
-
-      <!-- VARIABLES -->
+      <!-- Panel de consulta por fecha -->
       <div class="panel">
-        <div class="ph">Variables locales</div>
-        <div class="ig">
+        <div class="ph">Consultar precio en una fecha</div>
+        <div class="cuerpo-panel">
+          <p style="font-size:.68rem;color:var(--dim);line-height:1.5;">
+            Ingrese una fecha pasada para ver que precio estimaba el modelo,
+            y compare con el precio real de la plaza.
+          </p>
           <div class="field">
-            <label>Precio acopio hoy ($/bulto)</label>
-            <input type="number" id="inAcopio" placeholder="ej: 70000" min="0" max="200000" step="1000">
-            <span class="hint">Plaza Ipiales - opcional, mejora la prediccion</span>
+            <label>Fecha a consultar</label>
+            <input type="date" id="inFecha" max="">
+            <span class="hint">Cualquier fecha desde febrero 2026</span>
           </div>
           <div class="field">
-            <label>ACPM Pasto ($/galon)</label>
-            <input type="number" id="inAcpm" value="11282" min="5000" max="30000" step="100">
-            <span class="hint">Fuente: CREG - actualizar mensualmente</span>
+            <label>Precio real ese dia ($/kg) - opcional</label>
+            <input type="number" id="inPrecioReal" placeholder="ej: 1350" min="100" max="5000" step="50">
+            <span class="hint">Si lo tiene, calcula el error del modelo</span>
           </div>
-          <button class="bapl" id="btnApl" onclick="aplicar()">Aplicar y recalcular</button>
+          <button class="bconsulta" id="btnConsulta" onclick="consultarFecha()" disabled>
+            Ver estimacion para esa fecha
+          </button>
+
+          <div class="resultado-box" id="resBox">
+            <div class="res-titulo" id="resTitulo"></div>
+            <div class="res-precio" id="resPredichoVal"></div>
+            <div class="res-margen" id="resMargen"></div>
+            <div class="res-real" id="resRealBox" style="display:none;">
+              <div class="res-real-titulo">Precio real ingresado</div>
+              <div class="res-error" id="resError"></div>
+              <div class="res-exacto" id="resExacto"></div>
+            </div>
+            <div class="res-base" id="resBase"></div>
+          </div>
         </div>
       </div>
 
-      <!-- STATS -->
-      <div class="panel" id="statsPanel" style="display:none;">
-        <div class="ph">Estadisticas 14 dias</div>
-        <div id="statsBody" style="padding:12px 14px;font-size:0.72rem;line-height:2;"></div>
+      <!-- Clima -->
+      <div class="panel" id="climaPanel" style="display:none;">
+        <div class="ph">Clima Ipiales - proximos 7 dias</div>
+        <div id="climaBody"></div>
       </div>
     </div>
   </div>
 
   <p class="note">
-    Datos: <a href="https://www.dane.gov.co" target="_blank">DANE-SIPSA</a> Papa negra Pasto +
-    Acopio local Ipiales - Clima: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> -
-    <a href="https://github.com/roserocarlos/App-papa" target="_blank">GitHub</a> - AgroData IA v2
+    Fuentes: <a href="https://www.dane.gov.co" target="_blank">DANE-SIPSA</a> Papa negra Pasto
+    + registros de acopio Ipiales -
+    Clima: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> -
+    <a href="https://github.com/roserocarlos/App-papa" target="_blank">GitHub</a> - AgroData IA v3
   </p>
 </div>
 
 <script>
 var API    = "/api/sipsa";
 var _datos = null;
-var _unidad = "kg";   // "kg" o "bulto"
-var _vista  = 30;     // dias a mostrar (0 = todos)
-var _acpm   = 11282;
-var _acopio = 0;
+var _unidad = "kg";
+var _vista  = 30;
 
 var $ = function(id){ return document.getElementById(id); };
-var fmtCOP = function(n){ return new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n); };
+
+var fmtCOP = function(n){
+  return new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n);
+};
+
 var fmtF = function(f){
-  var dow=new Date(f+"T12:00:00Z").getUTCDay();
-  var p=f.split("-");
+  var dow = new Date(f+"T12:00:00Z").getUTCDay();
+  var p   = f.split("-");
   return ["dom","lun","mar","mie","jue","vie","sab"][dow]+" "+p[2]+"/"+p[1];
 };
-var sg = function(v){ return v>0?"+":""; };
 
-function setUnidad(u) {
+var sg = function(v){ return v > 0 ? "+" : ""; };
+
+function val(d){ return _unidad === "bulto" ? d.precio_kg*50 : d.precio_kg; }
+
+function setUnidad(u){
   _unidad = u;
-  $("tKg").classList.toggle("act", u==="kg");
+  $("tKg").classList.toggle("act",    u==="kg");
   $("tBulto").classList.toggle("act", u==="bulto");
-  if (_datos) { renderKpis(); renderChart(); renderTabla(); }
+  $("thKg").textContent = u==="kg" ? "$/kg" : "$/bulto";
+  if (_datos){ renderKpis(); renderChart(); renderTabla(); }
 }
 
-function setVista(d) {
+function setVista(d){
   _vista = d;
   ["v30","v90","vAll"].forEach(function(id){ $(id).classList.remove("act"); });
-  $( d===30?"v30": d===90?"v90":"vAll" ).classList.add("act");
+  $(d===30?"v30":d===90?"v90":"vAll").classList.add("act");
   if (_datos) renderChart();
 }
 
-function precioMostrar(d, campo) {
-  // campo: "precio" (serie) o "pred" (prediccion)
-  if (_unidad === "bulto") {
-    return campo === "pred" ? d.precio_bulto : d.precio_bulto || d.precio_kg*50;
-  }
-  return campo === "pred" ? d.precio_kg : d.precio_kg;
-}
-
-function renderKpis() {
-  var h = _datos.historico;
-  var p = _datos.prediccion;
+function renderKpis(){
   var ctx = _datos.contexto;
-  var hoyKg  = ctx.precio_actual_kg;
-  var manKg  = p[0].precio_kg;
-  var fin7Kg = p[6].precio_kg;
-  var d1  = ((manKg-hoyKg)/hoyKg*100).toFixed(1);
-  var d7  = ((fin7Kg-hoyKg)/hoyKg*100).toFixed(1);
+  var p   = _datos.prediccion;
+  var hKg = ctx.precio_actual_kg;
+  var mKg = p[0].precio_kg;
+  var fKg = p[6].precio_kg;
+  var d1  = ((mKg-hKg)/hKg*100).toFixed(1);
+  var d7  = ((fKg-hKg)/hKg*100).toFixed(1);
 
-  var hoyVal = _unidad==="bulto" ? ctx.precio_actual_bulto : hoyKg;
-  var manVal = _unidad==="bulto" ? manKg*50 : manKg;
+  var hVal = _unidad==="bulto" ? hKg*50 : hKg;
+  var mVal = _unidad==="bulto" ? mKg*50 : mKg;
+  var fVal = _unidad==="bulto" ? fKg*50 : fKg;
 
-  var clsMan = parseFloat(d1)>0?"rojo":parseFloat(d1)<0?"verde":"ocre";
-  var clsTend= parseFloat(d7)>3?"rojo":parseFloat(d7)<-3?"verde":"ocre";
+  var clsM = parseFloat(d1)>0?"rojo":parseFloat(d1)<0?"verde":"ocre";
+  var clsT = parseFloat(d7)>3?"rojo":parseFloat(d7)<-3?"verde":"ocre";
 
   $("kHoy").className="kpi verde vis";
-  $("kHoy").innerHTML="<div class='kl'>Precio hoy</div><div class='kv'>"+fmtCOP(hoyVal)+"</div><div class='ks'>"+(_unidad==="bulto"?"por bulto 50kg":"por kilogramo")+"</div>";
+  $("kHoy").innerHTML="<div class='kl'>Ultimo precio</div><div class='kv'>"+fmtCOP(hVal)+"</div>"+
+    "<div class='ks'>"+fmtF(ctx.fecha_ultimo_dato)+(ctx.dias_sin_actualizar>0?" (hace "+ctx.dias_sin_actualizar+"d)":"")+"</div>";
 
-  $("kMan").className="kpi "+clsMan+" vis";
-  $("kMan").innerHTML="<div class='kl'>Manana (est.)</div><div class='kv'>"+fmtCOP(manVal)+"</div><div class='ks'>"+sg(d1)+d1+"% vs hoy</div>";
+  $("kMan").className="kpi "+clsM+" vis";
+  $("kMan").innerHTML="<div class='kl'>Manana</div><div class='kv'>"+fmtCOP(mVal)+"</div>"+
+    "<div class='ks'>"+sg(d1)+d1+"% estimado</div>";
 
-  $("kTend").className="kpi "+clsTend+" vis";
-  $("kTend").innerHTML="<div class='kl'>Tendencia 7d</div><div class='kv'>"+sg(d7)+d7+"%</div><div class='ks'>"+(parseFloat(d7)>0?"al alza":"a la baja")+"</div>";
+  $("kTend").className="kpi "+clsT+" vis";
+  $("kTend").innerHTML="<div class='kl'>En 7 dias</div><div class='kv'>"+fmtCOP(fVal)+"</div>"+
+    "<div class='ks'>"+sg(d7)+d7+"% estimado</div>";
 
-  $("kFuente").className="kpi vis";
-  $("kFuente").innerHTML="<div class='kl'>Fuente precio</div><div class='kv' style='font-size:0.95rem;'>"+(ctx.fuente_precio_actual==="acopio"?"Acopio local":"DANE Pasto")+"</div><div class='ks'>"+ctx.dias_con_acopio+"d acopio / "+ctx.dias_con_dane+"d DANE</div>";
+  $("kDatos").className="kpi vis";
+  $("kDatos").innerHTML="<div class='kl'>Registros</div><div class='kv'>"+ctx.total_registros+"</div>"+
+    "<div class='ks'>"+ctx.registros_acopio+" acopio + "+(ctx.total_registros-ctx.registros_acopio)+" DANE</div>";
 
-  // Stats panel
-  var m14 = _unidad==="bulto" ? ctx.media14_bulto : ctx.media14_kg;
-  $("statsPanel").style.display="";
-  $("statsBody").innerHTML =
-    "Media 14d: <b>"+fmtCOP(m14)+"</b><br>" +
-    "Precio hoy: <b>"+fmtCOP(hoyVal)+"</b><br>" +
-    "Pred. dia 7: <b>"+fmtCOP(_unidad==="bulto"?fin7Kg*50:fin7Kg)+"</b><br>" +
-    "Modelo: AR(1) ventana 14d<br>" +
-    "Alpha: "+(_datos.prediccion[0].componentes?_datos.prediccion[0].componentes.alpha:"N/A")+"<br>" +
-    "Z-score: "+(_datos.prediccion[0].componentes?_datos.prediccion[0].componentes.z_score:"N/A");
+  // Badge confianza
+  var conf = ctx.confianza || "baja";
+  var confTxt = conf==="alta"?"Prediccion confiable":conf==="media"?"Prediccion aproximada":"Prediccion con retraso";
+  $("badgeConfianza").innerHTML = "<span class='confianza conf-"+conf+"'>"+confTxt+"</span>";
 }
 
-function renderChart() {
-  var h   = _datos.historico;
-  var p   = _datos.prediccion;
+function renderChart(){
+  var h = _datos.historico;
+  var p = _datos.prediccion;
 
-  // Filtrar: solo registros con precio > 0, ordenados por fecha
   var hLimpio = h.filter(function(d){ return d.precio_kg > 0; });
-  hLimpio.sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; });
+  hLimpio.sort(function(a,b){ return a.fecha<b.fecha?-1:1; });
 
-  // Vista: cortar por dias desde el final, o todo
   var histVista;
-  if (_vista > 0) {
-    // Tomar los ultimos N dias de calendario desde la fecha mas reciente
-    var ultFecha = new Date(hLimpio[hLimpio.length-1].fecha + "T12:00:00Z");
-    var limFecha = new Date(ultFecha);
-    limFecha.setDate(limFecha.getDate() - _vista);
-    histVista = hLimpio.filter(function(d){ return new Date(d.fecha+"T12:00:00Z") >= limFecha; });
+  if (_vista > 0){
+    var ultF   = new Date(hLimpio[hLimpio.length-1].fecha+"T12:00:00Z");
+    var limF   = new Date(ultF); limF.setDate(limF.getDate()-_vista);
+    histVista  = hLimpio.filter(function(d){ return new Date(d.fecha+"T12:00:00Z")>=limF; });
   } else {
     histVista = hLimpio;
   }
-
   if (!histVista.length) histVista = hLimpio.slice(-30);
+
   var ult = histVista[histVista.length-1];
 
-  // Separar por fuente
-  var xAco=[], yAco=[], xDane=[], yDane=[];
+  var xAco=[],yAco=[],xDane=[],yDane=[];
   histVista.forEach(function(d){
-    var val = _unidad==="bulto" ? d.precio_kg*50 : d.precio_kg;
-    if (d.fuente==="acopio"){ xAco.push(d.fecha); yAco.push(val); }
-    else { xDane.push(d.fecha); yDane.push(val); }
+    var v = val(d);
+    if (d.fuente==="acopio"){ xAco.push(d.fecha); yAco.push(v); }
+    else { xDane.push(d.fecha); yDane.push(v); }
   });
 
-  var ultVal = _unidad==="bulto" ? ult.precio_kg*50 : ult.precio_kg;
+  var ultVal = val(ult);
   var xPred  = [ult.fecha].concat(p.map(function(d){return d.fecha;}));
-  var yPred  = [ultVal].concat(p.map(function(d){ return _unidad==="bulto"?d.precio_bulto:d.precio_kg; }));
+  var yPred  = [ultVal].concat(p.map(function(d){return _unidad==="bulto"?d.precio_bulto:d.precio_kg;}));
 
-  // Rango Y: min/max de los datos visibles con margen
   var allY = yAco.concat(yDane).concat(yPred).filter(function(v){return v>0;});
-  var yMin = Math.max(0, Math.min.apply(null,allY) * 0.90);
-  var yMax = Math.max.apply(null,allY) * 1.08;
+  var yMin = Math.max(0, Math.min.apply(null,allY)*0.88);
+  var yMax = Math.max.apply(null,allY)*1.1;
 
-  Plotly.newPlot("chart", [
-    {
-      x:xDane, y:yDane, type:"scatter", mode:"lines+markers", name:"DANE Pasto",
-      line:{color:"#52b788",width:2},
-      marker:{size:4,color:"#52b788"},
-      connectgaps:false,
-      hovertemplate:"%{x|%d/%m/%Y}<br><b>$%{y:,.0f}</b><extra>DANE Pasto</extra>",
-    },
-    {
-      x:xAco, y:yAco, type:"scatter", mode:"lines+markers", name:"Acopio Ipiales",
-      line:{color:"#2d6a4f",width:2.5},
-      marker:{size:7,color:"#2d6a4f",symbol:"diamond"},
-      connectgaps:false,
-      hovertemplate:"%{x|%d/%m/%Y}<br><b>$%{y:,.0f}</b><extra>Acopio Ipiales</extra>",
-    },
-    {
-      x:xPred, y:yPred, type:"scatter", mode:"lines+markers", name:"Prediccion",
-      line:{color:"#c77b2e",width:2,dash:"dash"},
-      marker:{size:6,color:"#c77b2e",symbol:"circle-open",line:{width:2,color:"#c77b2e"}},
-      hovertemplate:"%{x|%d/%m/%Y}<br><b>~$%{y:,.0f}</b><extra>Prediccion</extra>",
-    }
-  ], {
-    margin:{t:8,l:72,r:14,b:50},
-    paper_bgcolor:"transparent", plot_bgcolor:"#f8faf5",
+  Plotly.newPlot("chart",[
+    {x:xDane,y:yDane,type:"scatter",mode:"lines+markers",name:"DANE Pasto",
+     line:{color:"#52b788",width:2},marker:{size:4,color:"#52b788"},connectgaps:false,
+     hovertemplate:"%{x|%d/%m/%Y}<br><b>$%{y:,.0f}</b><extra>DANE Pasto</extra>"},
+    {x:xAco,y:yAco,type:"scatter",mode:"lines+markers",name:"Acopio Ipiales",
+     line:{color:"#2d6a4f",width:2.5},marker:{size:7,color:"#2d6a4f",symbol:"diamond"},connectgaps:false,
+     hovertemplate:"%{x|%d/%m/%Y}<br><b>$%{y:,.0f}</b><extra>Acopio local</extra>"},
+    {x:xPred,y:yPred,type:"scatter",mode:"lines+markers",name:"Estimacion",
+     line:{color:"#c77b2e",width:2,dash:"dash"},
+     marker:{size:6,color:"#c77b2e",symbol:"circle-open",line:{width:2,color:"#c77b2e"}},
+     hovertemplate:"%{x|%d/%m/%Y}<br><b>~$%{y:,.0f}</b><extra>Estimacion</extra>"},
+  ],{
+    margin:{t:8,l:70,r:12,b:48},
+    paper_bgcolor:"transparent",plot_bgcolor:"#f8faf5",
     font:{family:"IBM Plex Mono,monospace",size:10,color:"#6b7d6e"},
-    xaxis:{
-      gridcolor:"#e2e8dc", showline:false,
-      type:"date",
-      tickformat:"%d/%m",
-      tickangle:-30,
-      nticks:8,
-    },
-    yaxis:{
-      gridcolor:"#e2e8dc", showline:false,
-      tickformat:",.0f", tickprefix:"$",
-      range:[yMin, yMax],
-    },
-    hovermode:"x unified", showlegend:false,
-    shapes:[{
-      type:"line", x0:ult.fecha, x1:ult.fecha, y0:0, y1:1, yref:"paper",
-      line:{color:"#d4dace",width:1.5,dash:"dot"}
-    }],
-    annotations:[{
-      x:ult.fecha, y:0.97, yref:"paper", text:"hoy", showarrow:false,
-      font:{size:9,color:"#6b7d6e"}, xanchor:"left", xshift:4
-    }],
-  }, {responsive:true, displayModeBar:false});
+    xaxis:{gridcolor:"#e2e8dc",showline:false,type:"date",tickformat:"%d/%m",tickangle:-30,nticks:8},
+    yaxis:{gridcolor:"#e2e8dc",showline:false,tickformat:",.0f",tickprefix:"$",range:[yMin,yMax]},
+    hovermode:"x unified",showlegend:false,
+    shapes:[{type:"line",x0:ult.fecha,x1:ult.fecha,y0:0,y1:1,yref:"paper",
+      line:{color:"#d4dace",width:1.5,dash:"dot"}}],
+    annotations:[{x:ult.fecha,y:0.97,yref:"paper",text:"ultimo dato",showarrow:false,
+      font:{size:8,color:"#6b7d6e"},xanchor:"left",xshift:4}],
+  },{responsive:true,displayModeBar:false});
 }
 
-function renderTabla() {
-  var h   = _datos.historico;
+function renderTabla(){
   var p   = _datos.prediccion;
   var hKg = _datos.contexto.precio_actual_kg;
   var dias=["Manana","Pasado manana","En 3 dias","En 4 dias","En 5 dias","En 6 dias","En 7 dias"];
-
   $("predBody").innerHTML = p.map(function(d,i){
     var pct = ((d.precio_kg-hKg)/hKg*100).toFixed(1);
     var cls = parseFloat(pct)>1?"dp":parseFloat(pct)<-1?"dn":"dz";
-    var valKg    = fmtCOP(d.precio_kg);
-    var valBulto = fmtCOP(d.precio_bulto);
-    return "<tr><td>"+dias[i]+"</td><td style='color:var(--dim);font-size:.65rem;'>"+fmtF(d.fecha)+"</td>" +
-      "<td style='font-weight:600;color:var(--ocre);'>"+valKg+"</td>" +
-      "<td style='color:var(--dim);'>"+valBulto+"</td>" +
-      "<td class='"+cls+"'>"+sg(pct)+pct+"%</td></tr>";
-  }).join(""));
+    var kg  = fmtCOP(d.precio_kg);
+    var blt = fmtCOP(d.precio_bulto);
+    var mg  = d.margen_kg ? "+-"+fmtCOP(d.margen_kg) : "";
+    return "<tr><td>"+dias[i]+"</td>"+
+      "<td style='color:var(--dim);font-size:.63rem;'>"+fmtF(d.fecha)+"</td>"+
+      "<td style='font-weight:600;color:var(--ocre);'>"+kg+"</td>"+
+      "<td style='color:var(--dim);'>"+blt+"</td>"+
+      "<td class='"+cls+"'>"+sg(pct)+pct+"%</td>"+
+      "<td class='margen'>"+mg+"</td></tr>";
+  }).join("");
   $("predPanel").style.display="";
 }
 
-function renderClima(fcst) {
-  if (!fcst || !fcst.length) return;
+function renderClima(clima){
+  if (!clima || !clima.length) return;
   $("climaPanel").style.display="";
-  $("climaBody").innerHTML = fcst.slice(0,7).map(function(d){
-    var ic = d.lluvia_mm>5?"lluvia":d.lluvia_mm>0?"nublado":"sol";
-    return "<div class='clima-dia'>" +
-      "<div><div style='font-size:.68rem;'>"+ic+" "+fmtF(d.fecha)+"</div>" +
-      "<div class='cf'>"+d.temp_min+"- "+d.temp_max+"C</div></div>" +
-      "<div style='text-align:right;'><div class='cll'>"+d.lluvia_mm+" mm</div>" +
+  $("climaBody").innerHTML = clima.slice(0,7).map(function(d){
+    var icon = d.lluvia_mm>10?"lluvia":d.lluvia_mm>0?"nublado":"sol";
+    return "<div class='clima-dia'>"+
+      "<div><div style='font-size:.66rem;'>["+icon+"] "+fmtF(d.fecha)+"</div>"+
+      "<div class='cf'>"+d.temp_min+"-"+d.temp_max+"C</div></div>"+
+      "<div style='text-align:right;'><div class='cll'>"+d.lluvia_mm+" mm</div>"+
       "<div class='cf'>"+d.prob_lluvia+"% prob.</div></div></div>";
-  }).join(""));
+  }).join("");
 }
 
-function mostrarBanner(tipo, msg) {
-  var b=$("banner"); b.className=tipo; b.textContent=msg; b.style.display="block";
-  $("dotLive").textContent=tipo==="warn"?"Cache":"Error";
+function consultarFecha(){
+  if (!_datos) return;
+  var fecha      = $("inFecha").value;
+  var precioReal = parseFloat($("inPrecioReal").value) || null;
+  if (!fecha) return;
+
+  var serie = _datos.historico;
+  // Llamar al endpoint con ?fecha=
+  var params = new URLSearchParams({ fecha: fecha });
+  if (precioReal) params.set("precio", precioReal);
+
+  fetch(API + "?" + params)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var c = data.consulta_fecha;
+      if (!c){ alert("No hay suficientes datos anteriores a esa fecha."); return; }
+      mostrarResultado(c, precioReal);
+    })
+    .catch(function(e){
+      // Calcular localmente si API no responde
+      var res = predecirLocal(serie, fecha, precioReal);
+      if (res) mostrarResultado(res, precioReal);
+      else alert("No hay datos suficientes para estimar ese precio.");
+    });
 }
-function ocultarBanner(){ $("banner").style.display="none"; $("dotLive").textContent="En vivo\nActualiz. diaria"; }
+
+function predecirLocal(serie, fechaObj, precioReal){
+  var antes = serie.filter(function(d){ return d.fecha < fechaObj && d.precio_kg > 0; });
+  if (antes.length < 3) return null;
+  var ventana = antes.slice(-14).map(function(d){ return d.precio_kg; });
+  var m = ventana.reduce(function(a,b){return a+b;},0)/ventana.length;
+  var s = Math.sqrt(ventana.reduce(function(t,x){return t+(x-m)*(x-m);},0)/ventana.length);
+  var ult = antes[antes.length-1];
+  var z   = s > 0 ? (ult.precio_kg-m)/s : 0;
+  var az  = Math.abs(z);
+  var al  = az<1?0.88:az<1.5?0.72:0.52;
+  var d1  = new Date(ult.fecha+"T12:00:00Z");
+  var d2  = new Date(fechaObj+"T12:00:00Z");
+  var dias= Math.round((d2-d1)/(24*3600*1000));
+  var prev = ult.precio_kg;
+  for (var i=0;i<dias;i++) prev = al*prev+(1-al)*m;
+  var pred = Math.round(Math.max(prev,300));
+  var mg   = Math.round(s*(1+dias*0.05));
+  var datoReal = null;
+  serie.forEach(function(d){ if(d.fecha===fechaObj) datoReal=d.precio_kg; });
+  var realKg = precioReal || datoReal;
+  return {
+    fecha: fechaObj, predicho_kg: pred, predicho_bulto: pred*50, margen_kg: mg,
+    real_kg: realKg, real_bulto: realKg?realKg*50:null,
+    error_kg: realKg?Math.abs(pred-realKg):null,
+    error_pct: realKg?Math.round(Math.abs(pred-realKg)/realKg*100*10)/10:null,
+    exacto: realKg?Math.abs(pred-realKg)<=mg:null,
+    basado_en:{ ultimo_dato:ult.fecha, precio_base:ult.precio_kg,
+      dias_proyectados:dias, alpha:al, media14_kg:Math.round(m) },
+  };
+}
+
+function mostrarResultado(c, precioReal){
+  var rb = $("resBox"); rb.style.display="";
+  $("resTitulo").textContent   = "Estimacion para el " + fmtF(c.fecha);
+  $("resPredichoVal").textContent = fmtCOP(c.predicho_kg) + " por kilo";
+  $("resMargen").textContent   = "Rango: " + fmtCOP(c.predicho_kg-c.margen_kg) + " - " + fmtCOP(c.predicho_kg+c.margen_kg);
+  $("resBase").textContent     = "Calculado desde: " + c.basado_en.ultimo_dato +
+    " (" + c.basado_en.dias_proyectados + " dias proyectados, media referencia: " +
+    fmtCOP(c.basado_en.media14_kg) + "/kg)";
+
+  if (c.real_kg){
+    $("resRealBox").style.display="";
+    $("resError").textContent = "Precio real: " + fmtCOP(c.real_kg) + "/kg - Diferencia: " +
+      fmtCOP(c.error_kg) + " (" + c.error_pct + "%)";
+    $("resError").style.color = c.error_pct <= 10 ? "var(--verde)" : c.error_pct <= 20 ? "var(--ocre)" : "var(--rojo)";
+    $("resExacto").textContent = c.exacto ?
+      "Dentro del margen de estimacion" :
+      "Fuera del margen - diferencia mayor a lo esperado";
+    $("resExacto").style.color = c.exacto ? "var(--verde)" : "var(--rojo)";
+  } else {
+    $("resRealBox").style.display="none";
+  }
+}
+
+function mostrarBanner(tipo, msg){ var b=$("banner"); b.className=tipo; b.textContent=msg; b.style.display="block"; }
+function ocultarBanner(){ $("banner").style.display="none"; }
 
 $("btnCsv").addEventListener("click", function(){
   if (!_datos) return;
   var h=_datos.historico, p=_datos.prediccion;
   var csv="tipo,fecha,precio_kg,precio_bulto50kg,fuente\n";
   h.forEach(function(d){ csv+="real,"+d.fecha+","+d.precio_kg+","+(d.precio_kg*50)+","+d.fuente+"\n"; });
-  p.forEach(function(d){ csv+="prediccion,"+d.fecha+","+d.precio_kg+","+d.precio_bulto+",modelo\n"; });
+  p.forEach(function(d){ csv+="estimacion,"+d.fecha+","+d.precio_kg+","+d.precio_bulto+",modelo\n"; });
   var a=Object.assign(document.createElement("a"),{
     href:URL.createObjectURL(new Blob([csv],{type:"text/csv"})),
     download:"precios_papa_ipiales_"+new Date().toISOString().slice(0,10)+".csv"
@@ -461,69 +524,123 @@ $("btnCsv").addEventListener("click", function(){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 });
 
-function aplicar(){
-  _acpm   = parseFloat($("inAcpm").value)   || 11282;
-  _acopio = parseFloat($("inAcopio").value) || 0;
-  cargar(true);
-}
-["inAcpm","inAcopio"].forEach(function(id){
-  $(id).addEventListener("keydown", function(e){ if(e.key==="Enter") aplicar(); });
-});
+// Datos demo para preview sin backend
+var DEMO = {
+  ok:true, generado:new Date().toISOString(), fromCache:false, intento:1,
+  historico:[
+    {fecha:"2026-02-13",precio_kg:900, precio_bulto:45000,fuente:"acopio"},
+    {fecha:"2026-02-16",precio_kg:1000,precio_bulto:50000,fuente:"acopio"},
+    {fecha:"2026-02-27",precio_kg:1100,precio_bulto:55000,fuente:"acopio"},
+    {fecha:"2026-03-02",precio_kg:1100,precio_bulto:55000,fuente:"acopio"},
+    {fecha:"2026-03-13",precio_kg:1200,precio_bulto:60000,fuente:"acopio"},
+    {fecha:"2026-03-20",precio_kg:1100,precio_bulto:55000,fuente:"acopio"},
+    {fecha:"2026-03-27",precio_kg:1000,precio_bulto:50000,fuente:"acopio"},
+    {fecha:"2026-03-30",precio_kg:1000,precio_bulto:50000,fuente:"acopio"},
+    {fecha:"2026-04-06",precio_kg:1300,precio_bulto:65000,fuente:"acopio"},
+    {fecha:"2026-04-13",precio_kg:1100,precio_bulto:55000,fuente:"acopio"},
+    {fecha:"2026-04-20",precio_kg:1300,precio_bulto:65000,fuente:"acopio"},
+    {fecha:"2026-04-24",precio_kg:1100,precio_bulto:55000,fuente:"acopio"},
+    {fecha:"2026-04-27",precio_kg:1200,precio_bulto:60000,fuente:"acopio"},
+    {fecha:"2026-05-08",precio_kg:1400,precio_bulto:70000,fuente:"acopio"},
+    {fecha:"2026-05-11",precio_kg:1400,precio_bulto:70000,fuente:"acopio"},
+    {fecha:"2026-05-15",precio_kg:1300,precio_bulto:65000,fuente:"acopio"},
+    {fecha:"2026-05-17",precio_kg:1400,precio_bulto:70000,fuente:"acopio"},
+    {fecha:"2026-05-18",precio_kg:1400,precio_bulto:70000,fuente:"acopio"},
+    {fecha:"2026-05-22",precio_kg:1400,precio_bulto:70000,fuente:"acopio"},
+    {fecha:"2026-05-25",precio_kg:1500,precio_bulto:75000,fuente:"acopio"},
+    {fecha:"2026-05-29",precio_kg:1600,precio_bulto:80000,fuente:"acopio"},
+  ],
+  prediccion:[],
+  contexto:{
+    precio_actual_kg:1600, precio_actual_bulto:80000,
+    fecha_ultimo_dato:"2026-05-29",
+    dias_sin_actualizar:52,
+    confianza:"baja",
+    media14_kg:1393, media14_bulto:69650,
+    fuente_ultimo:"acopio",
+    total_registros:21, registros_acopio:21,
+    clima_7dias:[], bulto_kg:50,
+  },
+};
+(function(){
+  var hKg=1600,m=1393,al=0.72,prev=hKg;
+  var base=new Date("2026-07-21T12:00:00Z");
+  for(var i=0;i<7;i++){
+    var d=new Date(base); d.setUTCDate(d.getUTCDate()+i+1);
+    var ar1=al*prev+(1-al)*m; prev=ar1;
+    var kg=Math.round(Math.max(ar1,300));
+    DEMO.prediccion.push({fecha:d.toISOString().split("T")[0],precio_kg:kg,precio_bulto:kg*50,
+      margen_kg:200+i*30,componentes:{alpha:al,z_score:1.15,media14_kg:m,dias_retraso:52,precio_base:hKg}});
+  }
+})();
 
-async function cargar(force) {
+async function cargar(force){
   var st=$("status");
-  st.className=""; st.innerHTML="<div class='sp'></div>Consultando DANE y acopio local...";
+  st.className=""; st.innerHTML="<div class='sp'></div>Consultando datos...";
   $("btnCsv").disabled=true;
   $("predPanel").style.display="none";
   $("climaPanel").style.display="none";
-  $("statsPanel").style.display="none";
+  $("btnConsulta").disabled=true;
   ocultarBanner();
 
-  var params=new URLSearchParams({acpm:_acpm,frontera:_acopio});
+  var params=new URLSearchParams();
   if(force) params.set("refresh","1");
 
-  try {
-    var r = await fetch(API+"?"+params);
+  try{
+    var r   = await fetch(API+"?"+params);
     var txt = await r.text();
     var data;
-    try { data=JSON.parse(txt); }
+    try{ data=JSON.parse(txt); }
     catch(_){
-      mostrarBanner("err","Respuesta inesperada del servidor (HTTP "+r.status+")");
-      st.className="err"; st.innerHTML="Error del servidor - intente mas tarde";
-      return;
+      throw new Error("Respuesta inesperada del servidor");
     }
-    if (!r.ok||!data.ok){
-      mostrarBanner("err","Error: "+(data.error||"desconocido")+". "+(data.sugerencia||""));
-      st.className="err"; st.innerHTML="Sin datos disponibles";
-      return;
-    }
-    _datos=data;
-    renderKpis();
-    renderChart();
-    renderTabla();
-    renderClima(data.contexto.clima_pronostico);
-    $("btnCsv").disabled=false;
-
-    if (data.cacheVencida){
-      mostrarBanner("warn","Datos de cache ("+data.cacheAge+" min) - DANE no disponible");
-      st.className="warn"; st.innerHTML="Datos en cache - "+data.advertencia;
-    } else if (data.fromCache){
-      st.className="ok"; st.innerHTML="Cache "+data.cacheAge+" min - ultimo: "+fmtF(data.historico[data.historico.length-1].fecha);
-    } else {
-      st.className="ok"; st.innerHTML=""+data.historico.length+" registros - ultimo: "+fmtF(data.historico[data.historico.length-1].fecha)+" - "+new Date(data.generado).toLocaleTimeString("es-CO");
-    }
+    if(!r.ok||!data.ok) throw new Error(data.error||"Error desconocido");
+    procesarDatos(data);
   } catch(e){
-    // En preview local sin backend, usar datos demo
-    console.warn("API no disponible, usando datos demo:", e.message);
-    _datos = DEMO;
-    renderKpis(); renderChart(); renderTabla();
-    var st2=$("status");
-    st2.className="warn";
-    st2.innerHTML="[DEMO] Datos de ejemplo - en Vercel se conecta al DANE en tiempo real";
-    mostrarBanner("warn","Vista previa con datos de ejemplo. La app real consulta DANE-SIPSA en tiempo real.");
-    $("btnCsv").disabled=false;
+    console.warn("API no disponible, usando demo:", e.message);
+    procesarDatos(DEMO);
+    mostrarBanner("info","Vista previa con datos de ejemplo. En produccion se conecta al DANE en tiempo real.");
   }
 }
+
+function procesarDatos(data){
+  _datos=data;
+  var ctx=data.contexto;
+  var st=$("status");
+
+  renderKpis();
+  renderChart();
+  renderTabla();
+  renderClima(ctx.clima_7dias);
+  $("btnCsv").disabled=false;
+  $("btnConsulta").disabled=false;
+
+  // Fecha max para el campo de consulta
+  $("inFecha").max = ctx.fecha_ultimo_dato;
+
+  // Avisos segun estado de datos
+  if (data.cacheVencida){
+    mostrarBanner("warn", "Los datos tienen "+data.cacheAge+" minutos de retraso. El servicio del DANE no respondio.");
+    st.className="warn"; st.innerHTML="Datos en cache - "+data.advertencia;
+  } else if (ctx.dias_sin_actualizar > 30){
+    mostrarBanner("warn",
+      "Los datos de acopio tienen "+ctx.dias_sin_actualizar+" dias sin actualizarse. "+
+      "La estimacion usa el ultimo precio conocido como referencia. "+
+      "Actualice el archivo de precios para mejorar la precision.");
+    st.className="warn";
+    st.innerHTML="Ultimo registro: "+fmtF(ctx.fecha_ultimo_dato)+" (hace "+ctx.dias_sin_actualizar+" dias)";
+  } else if (data.fromCache){
+    st.className="ok";
+    st.innerHTML="Datos actualizados hace "+data.cacheAge+" min";
+  } else {
+    st.className="ok";
+    st.innerHTML=""+data.historico.length+" registros cargados - ultimo: "+fmtF(ctx.fecha_ultimo_dato);
+  }
+}
+
+// Set fecha max en el campo de consulta
+var hoy = new Date(); hoy.setUTCHours(12,0,0,0);
+$("inFecha").max = hoy.toISOString().split("T")[0];
 
 cargar(false);
 </script>
