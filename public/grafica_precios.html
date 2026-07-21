@@ -2,37 +2,25 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Figura Poster - Precios Papa Ipiales</title>
+<title>Figura Poster</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
-body { margin: 20px; background: white; font-family: Arial, sans-serif; }
-#chart { width: 1100px; height: 620px; }
-.controles { margin-bottom: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-.btn-dl {
-  padding: 11px 30px; background: #2d6a4f; color: white;
-  border: none; border-radius: 5px; font-size: 15px; cursor: pointer;
+body { margin: 20px; background: #eee; font-family: Arial, sans-serif; }
+#chart { width: 800px; height: 800px; background: white; }
+.btn {
+  margin: 12px 0; padding: 12px 28px;
+  background: #2d6a4f; color: white; border: none;
+  border-radius: 5px; font-size: 15px; cursor: pointer; display: block;
 }
-.lbl { font-size: 13px; color: #555; }
-select { padding: 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; }
+.info { font-size: 12px; color: #666; margin-bottom: 8px; }
 </style>
 </head>
 <body>
-
-<div class="controles">
-  <span class="lbl">Tamano de fuente:</span>
-  <select id="szFont" onchange="redibujar()">
-    <option value="14">Normal (pantalla)</option>
-    <option value="18" selected>Grande (poster A1)</option>
-    <option value="22">Muy grande (poster A0)</option>
-  </select>
-  <button class="btn-dl" onclick="descargar()">Descargar PNG para poster</button>
-  <span class="lbl" style="color:#888;">Resolucion: 2400x1350px (300dpi en A4 landscape)</span>
-</div>
-
+<p class="info">Vista previa (800x800px). La descarga genera 1200x1200px apta para una columna de poster a 300 dpi.</p>
+<button class="btn" onclick="descargar()">Descargar PNG para poster (1200x1200px)</button>
 <div id="chart"></div>
 
 <script>
-// Datos de acopio local Ipiales
 var ACOPIO = [
   {f:"2026-02-06",p:1200},{f:"2026-02-09",p:1300},{f:"2026-02-13",p:900},
   {f:"2026-02-16",p:1000},{f:"2026-02-27",p:1100},{f:"2026-03-02",p:1100},
@@ -45,205 +33,178 @@ var ACOPIO = [
   {f:"2026-05-29",p:1600},
 ];
 
-// Datos DANE Pasto (referencia para comparacion)
 var DANE = [
-  {f:"2026-02-02",p:1650},{f:"2026-02-03",p:1700},{f:"2026-02-04",p:1700},
-  {f:"2026-02-05",p:1600},{f:"2026-02-06",p:1250},{f:"2026-02-09",p:1250},
-  {f:"2026-02-10",p:1350},{f:"2026-02-11",p:1300},{f:"2026-02-12",p:1150},
-  {f:"2026-02-13",p:900}, {f:"2026-02-16",p:1000},{f:"2026-02-17",p:1200},
-  {f:"2026-02-18",p:1250},{f:"2026-02-19",p:1200},{f:"2026-02-20",p:1050},
-  {f:"2026-02-23",p:1000},{f:"2026-02-24",p:1150},{f:"2026-02-25",p:1150},
-  {f:"2026-02-26",p:1150},{f:"2026-02-27",p:1100},{f:"2026-03-02",p:1100},
-  {f:"2026-03-03",p:1150},{f:"2026-03-04",p:1150},{f:"2026-03-05",p:1150},
-  {f:"2026-03-06",p:1050},{f:"2026-03-09",p:1150},{f:"2026-03-10",p:1200},
-  {f:"2026-03-11",p:1250},{f:"2026-03-12",p:1250},{f:"2026-03-13",p:1250},
-  {f:"2026-03-16",p:1250},{f:"2026-03-17",p:1250},{f:"2026-03-18",p:1350},
-  {f:"2026-03-19",p:1300},{f:"2026-03-20",p:1150},{f:"2026-03-24",p:1250},
-  {f:"2026-03-25",p:1240},{f:"2026-03-26",p:1250},{f:"2026-03-27",p:1075},
-  {f:"2026-03-30",p:1050},{f:"2026-03-31",p:1250},{f:"2026-04-01",p:1200},
-  {f:"2026-04-06",p:1300},{f:"2026-04-07",p:1350},{f:"2026-04-08",p:1650},
-  {f:"2026-04-10",p:1450},{f:"2026-04-13",p:1100},{f:"2026-04-14",p:1300},
-  {f:"2026-04-15",p:1400},{f:"2026-04-16",p:1250},{f:"2026-04-17",p:1100},
-  {f:"2026-04-20",p:1250},{f:"2026-04-21",p:1200},{f:"2026-04-22",p:1300},
-  {f:"2026-04-23",p:1250},{f:"2026-04-24",p:1150},{f:"2026-04-27",p:1250},
-  {f:"2026-04-28",p:1250},{f:"2026-04-29",p:1250},{f:"2026-04-30",p:1450},
-  {f:"2026-05-04",p:1350},{f:"2026-05-05",p:1500},{f:"2026-05-06",p:1450},
-  {f:"2026-05-07",p:1550},{f:"2026-05-11",p:1350},{f:"2026-05-12",p:1550},
-  {f:"2026-05-13",p:1300},{f:"2026-05-14",p:1550},{f:"2026-05-15",p:1325},
-  {f:"2026-05-18",p:1350},{f:"2026-05-19",p:1450},{f:"2026-05-21",p:1500},
-  {f:"2026-05-22",p:1450},{f:"2026-05-25",p:1450},{f:"2026-05-26",p:1550},
-  {f:"2026-05-27",p:1540},{f:"2026-05-28",p:1700},{f:"2026-05-29",p:1600},
+  {f:"2026-02-02",p:1650},{f:"2026-02-05",p:1600},{f:"2026-02-06",p:1250},
+  {f:"2026-02-09",p:1250},{f:"2026-02-13",p:900},{f:"2026-02-16",p:1000},
+  {f:"2026-02-20",p:1050},{f:"2026-02-23",p:1000},{f:"2026-02-27",p:1100},
+  {f:"2026-03-02",p:1100},{f:"2026-03-06",p:1050},{f:"2026-03-10",p:1200},
+  {f:"2026-03-13",p:1250},{f:"2026-03-18",p:1350},{f:"2026-03-20",p:1150},
+  {f:"2026-03-27",p:1075},{f:"2026-03-30",p:1050},{f:"2026-04-01",p:1200},
+  {f:"2026-04-06",p:1300},{f:"2026-04-08",p:1650},{f:"2026-04-13",p:1100},
+  {f:"2026-04-15",p:1400},{f:"2026-04-20",p:1250},{f:"2026-04-24",p:1150},
+  {f:"2026-04-27",p:1250},{f:"2026-04-30",p:1450},{f:"2026-05-05",p:1500},
+  {f:"2026-05-07",p:1550},{f:"2026-05-11",p:1350},{f:"2026-05-14",p:1550},
+  {f:"2026-05-18",p:1350},{f:"2026-05-21",p:1500},{f:"2026-05-25",p:1450},
+  {f:"2026-05-28",p:1700},{f:"2026-05-29",p:1600},
 ];
 
-var pa = ACOPIO.map(function(d){return d.p;});
-var pd = DANE.map(function(d){return d.p;});
-var promA = Math.round(pa.reduce(function(a,b){return a+b;},0)/pa.length);
-var minA  = Math.min.apply(null,pa);
-var maxA  = Math.max.apply(null,pa);
-var stdA  = Math.round(Math.sqrt(pa.reduce(function(s,x){return s+(x-promA)*(x-promA);},0)/pa.length));
-var cvA   = Math.round(stdA/promA*100);
+var pa   = ACOPIO.map(function(d){return d.p;});
+var prom = Math.round(pa.reduce(function(a,b){return a+b;},0)/pa.length);
+var mn   = Math.min.apply(null,pa);
+var mx   = Math.max.apply(null,pa);
+var std  = Math.round(Math.sqrt(pa.reduce(function(s,x){return s+(x-prom)*(x-prom);},0)/pa.length));
+var cv   = Math.round(std/prom*100);
+var iFMin = pa.indexOf(mn);
+var iFMax = pa.indexOf(mx);
 
-function redibujar() {
-  var sz = parseInt(document.getElementById("szFont").value);
-
-  var traces = [
-    // Banda de variacion +/- 1 desviacion (area)
+function dibujar(sz) {
+  Plotly.newPlot("chart", [
+    // Banda tipica
     {
-      x: ["2026-02-01","2026-05-31","2026-05-31","2026-02-01"],
-      y: [promA+stdA, promA+stdA, promA-stdA, promA-stdA],
-      fill: "toself", type: "scatter", mode: "none",
-      fillcolor: "rgba(82,183,136,0.12)",
-      showlegend: true, name: "Rango tipico (+/- 1 desv. est.)",
-      hoverinfo: "skip",
+      x:["2026-02-01","2026-05-31","2026-05-31","2026-02-01"],
+      y:[prom+std,prom+std,prom-std,prom-std],
+      fill:"toself",type:"scatter",mode:"none",
+      fillcolor:"rgba(82,183,136,0.15)",
+      name:"Rango tipico",hoverinfo:"skip",showlegend:true,
     },
-    // DANE Pasto (fondo)
+    // DANE
     {
-      x: DANE.map(function(d){return d.f;}),
-      y: pd,
-      type: "scatter", mode: "lines",
-      name: "DANE Pasto (referencia regional)",
-      line: { color: "#52b788", width: 2, dash: "dot" },
-      opacity: 0.8,
-      hovertemplate: "%{x|%d/%m}<br>DANE Pasto: <b>$%{y:,.0f}/kg</b><extra></extra>",
+      x:DANE.map(function(d){return d.f;}),
+      y:DANE.map(function(d){return d.p;}),
+      type:"scatter",mode:"lines",
+      name:"DANE-SIPSA Pasto",
+      line:{color:"#52b788",width:sz<20?2:3,dash:"dot"},
+      opacity:0.85,
+      hovertemplate:"%{x|%d/%m}<br><b>$%{y:,.0f}/kg</b><extra>DANE Pasto</extra>",
     },
-    // Acopio Ipiales (principal)
+    // Acopio
     {
-      x: ACOPIO.map(function(d){return d.f;}),
-      y: pa,
-      type: "scatter", mode: "lines+markers",
-      name: "Acopio local Ipiales (n=25)",
-      line: { color: "#2d6a4f", width: 3 },
-      marker: { size: 10, color: "#2d6a4f", symbol: "circle",
-                line: { width: 2, color: "white" } },
-      hovertemplate: "%{x|%d/%m}<br>Acopio Ipiales: <b>$%{y:,.0f}/kg</b><extra></extra>",
+      x:ACOPIO.map(function(d){return d.f;}),
+      y:pa,
+      type:"scatter",mode:"lines+markers",
+      name:"Acopio Ipiales (n=25)",
+      line:{color:"#2d6a4f",width:sz<20?2.5:4},
+      marker:{size:sz<20?9:13,color:"#2d6a4f",
+              line:{width:2,color:"white"}},
+      hovertemplate:"%{x|%d/%m}<br><b>$%{y:,.0f}/kg</b><extra>Acopio Ipiales</extra>",
     },
-    // Linea promedio
+    // Promedio
     {
-      x: ["2026-02-01","2026-05-31"],
-      y: [promA, promA],
-      type: "scatter", mode: "lines",
-      name: "Promedio $" + promA.toLocaleString("es-CO") + "/kg",
-      line: { color: "#c77b2e", width: 2.5, dash: "dash" },
-      hoverinfo: "skip",
+      x:["2026-02-01","2026-05-31"],y:[prom,prom],
+      type:"scatter",mode:"lines",
+      name:"Promedio $"+prom.toLocaleString("es-CO")+"/kg",
+      line:{color:"#c77b2e",width:sz<20?2:3,dash:"dash"},
+      hoverinfo:"skip",
     },
-    // Punto minimo
+    // Min marker
     {
-      x: [ACOPIO[pa.indexOf(minA)].f],
-      y: [minA],
-      type: "scatter", mode: "markers",
-      name: "Minimo $" + minA.toLocaleString("es-CO"),
-      marker: { size: 14, color: "#b5363a", symbol: "triangle-down",
-                line: { width: 2, color: "white" } },
-      hoverinfo: "skip",
+      x:[ACOPIO[iFMin].f],y:[mn],
+      type:"scatter",mode:"markers",showlegend:false,
+      marker:{size:sz<20?13:18,color:"#b5363a",
+              symbol:"triangle-down",line:{width:2,color:"white"}},
+      hoverinfo:"skip",
     },
-    // Punto maximo
+    // Max marker
     {
-      x: [ACOPIO[pa.indexOf(maxA)].f],
-      y: [maxA],
-      type: "scatter", mode: "markers",
-      name: "Maximo $" + maxA.toLocaleString("es-CO"),
-      marker: { size: 14, color: "#1a5c9e", symbol: "triangle-up",
-                line: { width: 2, color: "white" } },
-      hoverinfo: "skip",
+      x:[ACOPIO[iFMax].f],y:[mx],
+      type:"scatter",mode:"markers",showlegend:false,
+      marker:{size:sz<20?13:18,color:"#1a5c9e",
+              symbol:"triangle-up",line:{width:2,color:"white"}},
+      hoverinfo:"skip",
     },
-  ];
-
-  var layout = {
-    title: {
-      text: "Comportamiento del precio de la papa negra en Ipiales<br>" +
-            "<span style='font-size:" + (sz-3) + "px;color:#555;'>Registros de acopio local vs referencia DANE-SIPSA Pasto | Febrero - Mayo 2026</span>",
-      font: { size: sz+4, color: "#1c2b1e", family: "Arial" },
-      x: 0.5, xanchor: "center",
+  ], {
+    title:{
+      text:"Precio de la papa negra en Ipiales<br>" +
+           "<span style='font-size:"+(sz-2)+"px;color:#444;font-weight:normal;'>" +
+           "Acopio local vs referencia DANE-SIPSA Pasto | Feb - May 2026</span>",
+      font:{size:sz+6,color:"#1c2b1e",family:"Arial Black, Arial"},
+      x:0.5,xanchor:"center",
     },
-    paper_bgcolor: "white",
-    plot_bgcolor: "#f8faf5",
-    font: { family: "Arial", size: sz, color: "#3a5a3a" },
-    xaxis: {
-      title: { text: "Fecha", font: { size: sz+1 }, standoff: 12 },
-      gridcolor: "#e2e8dc", showline: true, linecolor: "#bbb", linewidth: 1.5,
-      type: "date", tickformat: "%d %b",
-      tickangle: -35, nticks: 14,
-      tickfont: { size: sz-1 },
+    paper_bgcolor:"white",
+    plot_bgcolor:"#f8faf5",
+    font:{family:"Arial",size:sz,color:"#2a3a2a"},
+    xaxis:{
+      title:{text:"",font:{size:sz}},
+      gridcolor:"#dde8da",showline:true,linecolor:"#aaa",linewidth:2,
+      type:"date",tickformat:"%b %Y",
+      tickangle:-40,nticks:6,
+      tickfont:{size:sz},
     },
-    yaxis: {
-      title: { text: "Precio ($ por kilogramo)", font: { size: sz+1 }, standoff: 10 },
-      gridcolor: "#e2e8dc", showline: true, linecolor: "#bbb", linewidth: 1.5,
-      tickformat: ",.0f", tickprefix: "$",
-      range: [650, 1850],
-      tickfont: { size: sz-1 },
+    yaxis:{
+      title:{text:"Precio ($/kg)",font:{size:sz},standoff:8},
+      gridcolor:"#dde8da",showline:true,linecolor:"#aaa",linewidth:2,
+      tickformat:",.0f",tickprefix:"$",
+      range:[680,1850],
+      tickfont:{size:sz},
     },
-    legend: {
-      orientation: "h", x: 0.5, xanchor: "center", y: -0.22,
-      font: { size: sz-1 }, bgcolor: "rgba(255,255,255,0.8)",
-      bordercolor: "#ddd", borderwidth: 1,
+    legend:{
+      orientation:"h",x:0.5,xanchor:"center",y:-0.18,
+      font:{size:sz-1},bgcolor:"rgba(255,255,255,0.9)",
+      bordercolor:"#ccc",borderwidth:1,
     },
-    margin: { t: 90, l: 85, r: 30, b: 120 },
-    annotations: [
-      // Caja de estadisticas
+    margin:{t:100,l:90,r:20,b:110},
+    annotations:[
+      // Caja estadisticas - esquina superior derecha
       {
-        x: 0.01, y: 0.99, xref: "paper", yref: "paper",
-        xanchor: "left", yanchor: "top",
-        text: "Estadisticas acopio Ipiales<br>" +
-              "Min: $" + minA.toLocaleString("es-CO") + "/kg<br>" +
-              "Max: $" + maxA.toLocaleString("es-CO") + "/kg<br>" +
-              "Prom: $" + promA.toLocaleString("es-CO") + "/kg<br>" +
-              "Desv.: $" + stdA.toLocaleString("es-CO") + "/kg<br>" +
-              "CV: " + cvA + "%",
-        showarrow: false,
-        font: { size: sz-1, color: "#1c2b1e" },
-        bgcolor: "rgba(255,255,255,0.92)",
-        bordercolor: "#2d6a4f", borderwidth: 2,
-        borderpad: 8, align: "left",
+        x:0.99,y:0.99,xref:"paper",yref:"paper",
+        xanchor:"right",yanchor:"top",
+        text:"<b>Resumen estadistico</b><br>" +
+             "Minimo:   $"+mn.toLocaleString("es-CO")+"/kg<br>"+
+             "Maximo:  $"+mx.toLocaleString("es-CO")+"/kg<br>"+
+             "Promedio: $"+prom.toLocaleString("es-CO")+"/kg<br>"+
+             "Desv. est.: $"+std.toLocaleString("es-CO")+"/kg<br>"+
+             "Coef. var.: "+cv+"%",
+        showarrow:false,
+        font:{size:sz,color:"#1c2b1e",family:"Arial"},
+        bgcolor:"rgba(255,255,255,0.95)",
+        bordercolor:"#2d6a4f",borderwidth:2,
+        borderpad:10,align:"left",
       },
-      // Flecha minimo
+      // Flecha min
       {
-        x: ACOPIO[pa.indexOf(minA)].f, y: minA,
-        ax: 40, ay: 40,
-        text: "$" + minA.toLocaleString("es-CO"),
-        font: { size: sz-1, color: "#b5363a", family: "Arial" },
-        showarrow: true, arrowhead: 2, arrowcolor: "#b5363a",
-        arrowwidth: 2, bgcolor: "white",
-        bordercolor: "#b5363a", borderwidth: 1, borderpad: 4,
+        x:ACOPIO[iFMin].f,y:mn,ax:50,ay:55,
+        text:"<b>$"+mn.toLocaleString("es-CO")+"</b><br>Minimo",
+        font:{size:sz-1,color:"#b5363a",family:"Arial"},
+        showarrow:true,arrowhead:2,arrowcolor:"#b5363a",arrowwidth:2,
+        bgcolor:"white",bordercolor:"#b5363a",borderwidth:1,borderpad:5,
       },
-      // Flecha maximo
+      // Flecha max
       {
-        x: ACOPIO[pa.indexOf(maxA)].f, y: maxA,
-        ax: -40, ay: -40,
-        text: "$" + maxA.toLocaleString("es-CO"),
-        font: { size: sz-1, color: "#1a5c9e", family: "Arial" },
-        showarrow: true, arrowhead: 2, arrowcolor: "#1a5c9e",
-        arrowwidth: 2, bgcolor: "white",
-        bordercolor: "#1a5c9e", borderwidth: 1, borderpad: 4,
+        x:ACOPIO[iFMax].f,y:mx,ax:-50,ay:-55,
+        text:"<b>$"+mx.toLocaleString("es-CO")+"</b><br>Maximo",
+        font:{size:sz-1,color:"#1a5c9e",family:"Arial"},
+        showarrow:true,arrowhead:2,arrowcolor:"#1a5c9e",arrowwidth:2,
+        bgcolor:"white",bordercolor:"#1a5c9e",borderwidth:1,borderpad:5,
       },
-      // Pie de figura
+      // Pie
       {
-        x: 0.5, y: -0.34, xref: "paper", yref: "paper",
-        xanchor: "center",
-        text: "Figura 1. Precio de la papa negra registrado en la plaza de mercado de Ipiales y precio de referencia DANE-SIPSA en Pasto (Feb-May 2026).<br>" +
-              "Fuente: Registros de acopio propio (n=25) y servicio SOAP DANE-SIPSA. Elaboracion: Semillero Electrothings, SENA Regional Narino.",
-        showarrow: false,
-        font: { size: sz-3, color: "#555", family: "Arial" },
-        align: "center",
+        x:0.5,y:-0.3,xref:"paper",yref:"paper",xanchor:"center",
+        text:"Figura 1. Precios registrados en plaza de mercado Ipiales vs DANE-SIPSA Pasto (Feb-May 2026).<br>"+
+             "Fuente: Registros de acopio propio + servicio SOAP DANE-SIPSA. Semillero Electrothings, SENA Narino.",
+        showarrow:false,
+        font:{size:sz-3,color:"#555",family:"Arial"},
+        align:"center",
       },
     ],
-  };
-
-  Plotly.react("chart", traces, layout, {
-    responsive: false, displayModeBar: false,
-  });
+  },{responsive:false,displayModeBar:false});
 }
 
 function descargar() {
-  Plotly.downloadImage("chart", {
-    format: "png",
-    width: 2400,
-    height: 1350,
-    filename: "figura1_precios_papa_ipiales_2026",
-    scale: 1,
-  });
+  // Dibujar version grande para descarga
+  dibujar(28);
+  setTimeout(function(){
+    Plotly.downloadImage("chart",{
+      format:"png", width:1200, height:1200,
+      filename:"figura1_papa_ipiales_poster",
+      scale:1,
+    });
+    // Restaurar vista normal
+    setTimeout(function(){ dibujar(16); }, 2000);
+  }, 800);
 }
 
-redibujar();
+// Vista previa con fuente normal
+dibujar(16);
 </script>
 </body>
 </html>
