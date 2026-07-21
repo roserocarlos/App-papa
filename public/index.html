@@ -476,8 +476,15 @@ async function cargar(force) {
       st.className="ok"; st.innerHTML="[lluvia]"+data.historico.length+" registros - ultimo: "+fmtF(data.historico[data.historico.length-1].fecha)+" - "+new Date(data.generado).toLocaleTimeString("es-CO");
     }
   } catch(e){
-    mostrarBanner("err","Error de conexion");
-    st.className="err"; st.innerHTML="Error: "+e.message;
+    // En preview local sin backend, usar datos demo
+    console.warn("API no disponible, usando datos demo:", e.message);
+    _datos = DEMO;
+    renderKpis(); renderChart(); renderTabla();
+    var st2=$("status");
+    st2.className="warn";
+    st2.innerHTML="[DEMO] Datos de ejemplo - en Vercel se conecta al DANE en tiempo real";
+    mostrarBanner("warn","Vista previa con datos de ejemplo. La app real consulta DANE-SIPSA en tiempo real.");
+    $("btnCsv").disabled=false;
   }
 }
 
