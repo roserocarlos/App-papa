@@ -125,7 +125,7 @@ async function fetchPrecionDANE() {
     pf[fecha].push(prec);
   }
   var keys = Object.keys(pf);
-  if (!keys.length) throw new Error("DANE sin registros Papa negra Pasto");
+  if (!keys.length) { console.warn("[DANE] Sin Papa negra Pasto"); return []; }
   return keys
     .map(function(f) {
       var arr  = pf[f];
