@@ -149,7 +149,10 @@ function combinar(csvDatos, daneDatos) {
     }
   });
   return Object.values(mapa)
-    .filter(function(d){ return d.precio_kg > 0; })
+    .filter(function(d){
+      // Excluir precios menores a 200 $/kg (datos DANE 2020 con escala incorrecta)
+      return d.precio_kg >= 200;
+    })
     .sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; });
 }
 
