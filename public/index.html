@@ -592,18 +592,34 @@ async function cargar(force){
     var data;
     try{ data=JSON.parse(txt); }
     catch(_){
-      throw new Error("Respuesta inesperada del servidor");
+      throw new Error("Respuesta inesperada del servidor (HTTP "+r.status+")");
     }
     if(!r.ok||!data.ok) throw new Error(data.error||"Error desconocido");
+    // Filtrar datos 2020 con precios anomalos (<200 $/kg - son errores de escala SIPSA)
+    data.historico = data.historico.filter(function(d){ return d.precio_kg >= 200; });
     procesarDatos(data);
   } catch(e){
-    console.warn("API no disponible, usando demo:", e.message);
-    procesarDatos(DEMO);
-    mostrarBanner("info","Vista previa con datos de ejemplo. En produccion se conecta al DANE en tiempo real.");
+    if(e.message.indexOf("fetch")!==-1 || e.message.indexOf("network")!==-1 ||
+       e.message.indexOf("Failed")!==-1 || e.message.indexOf("NetworkError")!==-1){
+      // Solo usar demo si es error de red real (no hay backend)
+      console.warn("Sin conexion al backend, usando demo:", e.message);
+      procesarDatos(DEMO);
+      mostrarBanner("info","Vista previa con datos de ejemplo. En produccion se conecta al DANE en tiempo real.");
+    } else {
+      // Error real - mostrar al usuario
+      console.error("Error procesando datos:", e.message);
+      mostrarBanner("err", "Error cargando datos: "+e.message);
+      var st=$("status"); st.className="err";
+      st.innerHTML="No se pudieron cargar los datos. Intente de nuevo.";
+    }
   }
 }
 
 function procesarDatos(data){
+  // Filtrar precios anomalos (datos DANE 2020 con escala incorrecta)
+  if (data.historico) {
+    data.historico = data.historico.filter(function(d){ return d.precio_kg >= 200; });
+  }
   _datos=data;
   var ctx=data.contexto;
   var st=$("status");
