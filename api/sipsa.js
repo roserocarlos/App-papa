@@ -1,13 +1,15 @@
-// api/sipsa.js - Modelo AR(1) adaptativo corregido
-// Basado en analisis estadistico real de serie SIPSA 1332 dias:
-// - Autocorrelacion lag1=0.946: alta persistencia
-// - CV=27%, reversion promedio 16.5 dias
-// - Alpha adaptativo por z-score, ajustes contextuales NO encadenados
+// api/sipsa.js - AgroData IA v2
+// Modelo AR(1) adaptativo ventana 14 dias
+// Precio base: acopio local Ipiales > DANE Pasto fallback
+// Unidades: $/kg y $/bulto 50kg
 export const config = { maxDuration: 60 };
 
 var _cache = null;
 var CACHE_TTL = 6 * 60 * 60 * 1000;
 var SOAP_URL = "https://appweb.dane.gov.co/sipsaWS/SrvSipsaUpraBeanService";
+var CSV_URL  = "https://raw.githubusercontent.com/roserocarlos/App-papa/main/data/precios_ipiales.csv";
+var BULTO_KG = 50;
+
 var ZONAS = {
   ipiales:   { lat: 0.8304,  lon: -77.6441 },
   tuquerres: { lat: 1.0833,  lon: -77.6167 },
@@ -26,7 +28,7 @@ function getTag(block, tag) {
     return e2 === -1 ? "" : block.slice(b2, e2).trim();
   }
   var start = a + open.length;
-  var end = block.indexOf(close, start);
+  var end   = block.indexOf(close, start);
   return end === -1 ? "" : block.slice(start, end).trim();
 }
 
@@ -34,7 +36,7 @@ function extraerBloques(xml) {
   var results = [];
   var pos = 0;
   while (true) {
-    var s = xml.indexOf("<", pos);
+    var s  = xml.indexOf("<", pos);
     if (s === -1) break;
     var gt = xml.indexOf(">", s);
     if (gt === -1) break;
@@ -42,7 +44,7 @@ function extraerBloques(xml) {
     var ln = tc.split(":").pop().split(" ")[0];
     if (ln === "return") {
       var ca = "</" + ln + ">";
-      var e = xml.indexOf("</" + tc + ">", gt);
+      var e  = xml.indexOf("</" + tc + ">", gt);
       if (e === -1) e = xml.indexOf(ca, gt);
       if (e === -1) { pos = gt + 1; continue; }
       results.push(xml.slice(gt + 1, e));
@@ -71,7 +73,36 @@ async function fetchSOAP(body, ms) {
   } catch(e) { clearTimeout(t); throw e; }
 }
 
-async function fetchPrecios() {
+// Cargar CSV de precios locales Ipiales desde GitHub
+async function fetchPreciosLocales() {
+  try {
+    var r = await fetch(CSV_URL + "?t=" + Date.now(), { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return {};
+    var txt = await r.text();
+    var lines = txt.split("\n").slice(1).filter(Boolean);
+    var mapa = {};
+    lines.forEach(function(l) {
+      var p = l.split(",");
+      var fecha   = p[0] ? p[0].trim() : "";
+      var acopio  = parseFloat(p[1]); // bulto
+      var dane    = parseFloat(p[2]); // bulto
+      if (!fecha) return;
+      mapa[fecha] = {
+        acopio_bulto: isNaN(acopio) || acopio === 0 ? null : acopio,
+        dane_bulto:   isNaN(dane)   || dane   === 0 ? null : dane,
+        acopio_kg:    isNaN(acopio) || acopio === 0 ? null : Math.round(acopio / BULTO_KG),
+        dane_kg:      isNaN(dane)   || dane   === 0 ? null : Math.round(dane   / BULTO_KG),
+      };
+    });
+    return mapa;
+  } catch(e) {
+    console.warn("[CSV] No se pudo cargar:", e.message);
+    return {};
+  }
+}
+
+// DANE Pasto: Papa negra, precio en $/kg
+async function fetchPrecionDANE() {
   var xml = await fetchSOAP(
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
     "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:ser=\"http://servicios.sipsa.co.gov.dane/\">" +
@@ -80,63 +111,80 @@ async function fetchPrecios() {
   var pf = {};
   var bl = extraerBloques(xml);
   for (var i = 0; i < bl.length; i++) {
-    var b = bl[i];
+    var b      = bl[i];
     var prod   = getTag(b, "producto").toLowerCase();
     var ciudad = getTag(b, "ciudad").toLowerCase();
     var fecha  = getTag(b, "fechaCaptura").split("T")[0];
     var prec   = parseFloat(getTag(b, "precioPromedio"));
-    // Filtro: solo "Papa negra" (variedad dominante en Narino) en PASTO
-    // Pasto es la unica central mayorista SIPSA cercana a Ipiales
-    // Se excluye Papa criolla (diferente cultivo) y ciudades lejanas
-    var esPapaNegra = prod.indexOf("papa negra") !== -1;
-    var esPasto     = ciudad.indexOf("pasto") !== -1;
-    if (!esPapaNegra || !esPasto || !fecha || isNaN(prec) || prec <= 0) continue;
+    // Papa negra en Pasto - precio viene en $/bulto desde SIPSA
+    if (prod.indexOf("papa negra") === -1) continue;
+    if (ciudad.indexOf("pasto") === -1) continue;
+    if (!fecha || isNaN(prec) || prec <= 0) continue;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) continue;
     if (!pf[fecha]) pf[fecha] = [];
     pf[fecha].push(prec);
   }
   var keys = Object.keys(pf);
-  if (!keys.length) throw new Error("SIPSA sin registros de papa");
+  if (!keys.length) throw new Error("DANE sin registros Papa negra Pasto");
   return keys
     .map(function(f) {
-      var arr = pf[f];
-      return { fecha: f, precio: Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length) };
+      var arr  = pf[f];
+      var bulto = Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length);
+      return {
+        fecha:      f,
+        dane_bulto: bulto,
+        dane_kg:    Math.round(bulto / BULTO_KG),
+        fuente:     "dane",
+      };
     })
     .sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; });
 }
 
-async function fetchAbastecimiento() {
-  var xml = await fetchSOAP(
-    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-    "<soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:ser=\"http://servicios.sipsa.co.gov.dane/\">" +
-    "<soap:Header/><soap:Body><ser:promedioAbasSipsaMesMadr/></soap:Body></soap:Envelope>",
-    10000
-  );
-  var pm = {};
-  var bl = extraerBloques(xml);
-  for (var i = 0; i < bl.length; i++) {
-    var b = bl[i];
-    var nom = getTag(b, "artiNombre").toLowerCase();
-    var mes = getTag(b, "fechaMesIni").split("T")[0].slice(0, 7);
-    var fid = getTag(b, "fuenId");
-    var ton = parseFloat(getTag(b, "cantidadTon"));
-    if (nom.indexOf("papa") === -1 || !mes || isNaN(ton) || ton <= 0) continue;
-    if (!pm[mes]) pm[mes] = {};
-    if (!pm[mes][fid]) pm[mes][fid] = ton;
-  }
-  return Object.keys(pm)
-    .map(function(mes) {
-      var vals = Object.values(pm[mes]);
-      return { mes: mes, toneladas: Math.round(vals.reduce(function(a,b){return a+b;},0)) };
-    })
-    .sort(function(a,b){ return a.mes < b.mes ? -1 : 1; });
+// Combinar fuentes: acopio local tiene prioridad sobre DANE
+// Serie unificada en $/kg para el modelo
+function combinarSeries(daneSerie, localMapa) {
+  // Incluir todos los dias DANE y enriquecer con local
+  var serie = daneSerie.map(function(d) {
+    var local = localMapa[d.fecha] || {};
+    var precio_kg = local.acopio_kg || d.dane_kg;
+    return {
+      fecha:        d.fecha,
+      precio_kg:    precio_kg,
+      precio_bulto: precio_kg * BULTO_KG,
+      acopio_kg:    local.acopio_kg || null,
+      acopio_bulto: local.acopio_bulto || null,
+      dane_kg:      d.dane_kg,
+      dane_bulto:   d.dane_bulto,
+      fuente:       local.acopio_kg ? "acopio" : "dane",
+    };
+  });
+
+  // Agregar dias con solo dato local que no esten en DANE
+  Object.keys(localMapa).forEach(function(fecha) {
+    var ya = serie.some(function(d){ return d.fecha === fecha; });
+    if (ya) return;
+    var local = localMapa[fecha];
+    if (!local.acopio_kg) return;
+    serie.push({
+      fecha:        fecha,
+      precio_kg:    local.acopio_kg,
+      precio_bulto: local.acopio_kg * BULTO_KG,
+      acopio_kg:    local.acopio_kg,
+      acopio_bulto: local.acopio_bulto,
+      dane_kg:      local.dane_kg || null,
+      dane_bulto:   local.dane_bulto || null,
+      fuente:       "acopio",
+    });
+  });
+
+  return serie.sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; });
 }
 
 async function fetchClima(lat, lon) {
   var tz   = "America%2FBogota";
-  var vars = "precipitation_sum,temperature_2m_max,temperature_2m_min,et0_fao_evapotranspiration,rain_sum";
+  var vars = "precipitation_sum,temperature_2m_max,temperature_2m_min,rain_sum";
   var u1 = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
-    "&daily=" + vars + "&past_days=30&forecast_days=1&timezone=" + tz;
+    "&daily=" + vars + "&past_days=14&forecast_days=1&timezone=" + tz;
   var u2 = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
     "&daily=precipitation_sum,temperature_2m_max,temperature_2m_min,precipitation_probability_max,rain_sum" +
     "&forecast_days=7&timezone=" + tz;
@@ -159,87 +207,75 @@ async function fetchClima(lat, lon) {
   };
 }
 
-// AR(1) adaptativo - CORRECCION: ajustes calculados una sola vez desde precio HOY
-// no se acumulan en cada iteracion para evitar divergencia
-function modeloAR1(historico, climaIp, climaTq, abast, acpm) {
-  if (historico.length < 15) return modeloSimple(historico);
+// Modelo AR(1) adaptativo - ventana 14 dias (alta volatilidad)
+function modeloAR1(serie, climaIp, acpm) {
+  if (serie.length < 7) return modeloSimple(serie);
 
-  var pr30  = historico.slice(-30).map(function(d){return d.precio;});
-  var med30 = pr30.reduce(function(a,b){return a+b;},0) / pr30.length;
-  var std30 = Math.sqrt(pr30.reduce(function(s,x){return s+(x-med30)*(x-med30);},0)/pr30.length);
-  var hoy   = historico[historico.length-1].precio;
-  var z     = std30 > 0 ? (hoy - med30) / std30 : 0;
-  var absZ  = Math.abs(z);
+  // Ventana 14 dias - mas sensible a cambios recientes
+  var ventana  = serie.slice(-14).map(function(d){ return d.precio_kg; });
+  var med14    = ventana.reduce(function(a,b){return a+b;},0) / ventana.length;
+  var std14    = Math.sqrt(ventana.reduce(function(s,x){return s+(x-med14)*(x-med14);},0)/ventana.length);
+  var hoy_kg   = serie[serie.length-1].precio_kg;
+  var z        = std14 > 0 ? (hoy_kg - med14) / std14 : 0;
+  var absZ     = Math.abs(z);
 
-  // Alpha: persistencia alta en rango normal, reversion cuando se aleja
-  // Calibrado sobre reversion promedio observada de 16.5 dias
-  var alpha = absZ < 1.0 ? 0.90 : absZ < 1.5 ? 0.75 : 0.55;
+  // Alpha adaptativo calibrado sobre ventana 14d
+  var alpha = absZ < 1.0 ? 0.88 : absZ < 1.5 ? 0.72 : 0.52;
 
-  // Ajustes contextuales - calculados UNA SOLA VEZ sobre precio actual
-  // Son perturbaciones fijas, no se amplifican en cada paso
-  var llIp = climaIp.historico.slice(-7).map(function(d){return d.lluvia_mm;});
+  // Ajuste lluvia ultimos 7d - max +3%
+  var llIp  = climaIp.historico.slice(-7).map(function(d){return d.lluvia_mm;});
   var llMed = llIp.length ? llIp.reduce(function(a,b){return a+b;},0)/llIp.length : 0;
-  var ajLl = llMed > 10 ? Math.min((llMed-10)/20, 1) * 0.03 : 0;
+  var ajLl  = llMed > 10 ? Math.min((llMed-10)/20, 1) * 0.03 : 0;
 
-  // Abastecimiento desactivado: datos SIPSA en toneladas no comparables entre anos
-  // (cobertura y metodologia cambian). Se activa cuando haya datos locales calibrados.
-  var ajAbs = 0;
-
+  // Ajuste ACPM - max +-2%
   var ajAcpm = acpm > 0 ? Math.max(-0.02, Math.min(0.02, (acpm-11000)/11000*0.3)) : 0;
 
-  var fu  = new Date(historico[historico.length-1].fecha + "T12:00:00Z");
+  // Estacionalidad - max +-2%
+  var fu  = new Date(serie[serie.length-1].fecha + "T12:00:00Z");
   var ini = new Date(Date.UTC(fu.getUTCFullYear(), 0, 1));
   var sem = Math.ceil((fu - ini) / (7*24*3600*1000));
   var ajEst = Math.sin(2*Math.PI*(sem-13)/52) * 0.02;
 
-  // Perturbacion contextual total - aplicada una vez, constante para todos los dias
-  var perturbacion = hoy * (ajLl + ajAbs + ajAcpm + ajEst);
+  // Perturbacion total calculada sobre precio hoy, se amortigua con distancia
+  var pert = hoy_kg * (ajLl + ajAcpm + ajEst);
 
-  // Prediccion: AR(1) puro encadenado + perturbacion fija
-  // AR(1) converge naturalmente a med30 sin diverger
   var base = new Date(fu);
-  var prev = hoy;
+  var prev = hoy_kg;
   var pred = [];
 
   for (var i = 0; i < 7; i++) {
     var d = new Date(base);
     d.setUTCDate(d.getUTCDate() + i + 1);
-
-    // AR(1) puro: converge a med30 a tasa (1-alpha) por periodo
-    var ar1 = alpha * prev + (1 - alpha) * med30;
-
-    // Perturbacion contextual: se amortigua con la distancia (menos certeza)
-    var factorAmort = Math.exp(-0.15 * i);
-    var precioEst = ar1 + perturbacion * factorAmort;
-
-    prev = ar1; // encadenar solo el AR(1), no la perturbacion
-
+    var ar1       = alpha * prev + (1 - alpha) * med14;
+    var amort     = Math.exp(-0.15 * i);
+    var precio_kg = Math.round(Math.max(ar1 + pert * amort, 300));
+    prev = ar1;
     pred.push({
-      fecha:  d.toISOString().split("T")[0],
-      precio: Math.round(Math.max(precioEst, 500)),
+      fecha:        d.toISOString().split("T")[0],
+      precio_kg:    precio_kg,
+      precio_bulto: precio_kg * BULTO_KG,
       componentes: {
-        ar1:            Math.round(ar1),
-        alpha:          alpha,
-        z_score:        Math.round(z*100)/100,
-        perturbacion:   Math.round(perturbacion * factorAmort),
+        ar1_kg:      Math.round(ar1),
+        alpha:       alpha,
+        z_score:     Math.round(z*100)/100,
+        media14_kg:  Math.round(med14),
+        perturbacion_kg: Math.round(pert * amort),
       },
     });
   }
   return pred;
 }
 
-function modeloSimple(historico) {
-  var v = historico.slice(-30).map(function(d){return d.precio;});
-  var n = v.length;
-  var m = v.reduce(function(a,b){return a+b;},0)/n;
-  var xm=(n-1)/2, num=0, den=0;
-  v.forEach(function(y,x){num+=(x-xm)*(y-m);den+=(x-xm)*(x-xm);});
-  var sl = den ? num/den : 0;
-  var base = new Date(historico[historico.length-1].fecha + "T12:00:00Z");
+function modeloSimple(serie) {
+  var v  = serie.slice(-14).map(function(d){return d.precio_kg;});
+  var n  = v.length;
+  var m  = v.reduce(function(a,b){return a+b;},0)/n;
+  var base = new Date(serie[serie.length-1].fecha + "T12:00:00Z");
   var res = [];
-  for (var i=0; i<7; i++) {
+  for (var i = 0; i < 7; i++) {
     var d = new Date(base); d.setUTCDate(d.getUTCDate()+i+1);
-    res.push({ fecha: d.toISOString().split("T")[0], precio: Math.round(Math.max(m+sl*(n+i),500)), componentes: null });
+    var kg = Math.round(Math.max(m, 300));
+    res.push({ fecha: d.toISOString().split("T")[0], precio_kg: kg, precio_bulto: kg*BULTO_KG, componentes: null });
   }
   return res;
 }
@@ -247,7 +283,7 @@ function modeloSimple(historico) {
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Cache-Control", "s-maxage=21600, stale-while-revalidate");
+  res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
   if (req.method === "OPTIONS") { res.status(204).end(); return; }
 
   var ahora = Date.now();
@@ -263,27 +299,50 @@ export default async function handler(req, res) {
 
   for (var intento = 1; intento <= 2; intento++) {
     try {
-      var historico = await fetchPrecios();
-      var abast     = await fetchAbastecimiento().catch(function(){ return []; });
-      var climas    = await Promise.all([
-        fetchClima(ZONAS.ipiales.lat,   ZONAS.ipiales.lon).catch(function(){ return { historico:[], pronostico:[] }; }),
-        fetchClima(ZONAS.tuquerres.lat, ZONAS.tuquerres.lon).catch(function(){ return { historico:[], pronostico:[] }; }),
+      // Cargar fuentes en paralelo - CSV local no bloquea si falla
+      var results = await Promise.allSettled([
+        fetchPrecionDANE(),
+        fetchPreciosLocales(),
+        fetchClima(ZONAS.ipiales.lat, ZONAS.ipiales.lon).catch(function(){ return { historico:[], pronostico:[] }; }),
       ]);
 
-      var prediccion = modeloAR1(historico, climas[0], climas[1], abast, acpm);
-      var fcst = climas[0].pronostico.slice(0,7).map(function(d) {
-        return { fecha:d.fecha, lluvia_mm:d.lluvia_mm, prob_lluvia:d.prob_lluvia, temp_max:d.temp_max, temp_min:d.temp_min };
-      });
+      var daneSerie  = results[0].status === "fulfilled" ? results[0].value : [];
+      var localMapa  = results[1].status === "fulfilled" ? results[1].value : {};
+      var climaIp    = results[2].status === "fulfilled" ? results[2].value : { historico:[], pronostico:[] };
+
+      if (!daneSerie.length && !Object.keys(localMapa).length) {
+        throw new Error("Sin datos disponibles de ninguna fuente");
+      }
+
+      // Serie combinada: acopio local > DANE Pasto
+      var serie = combinarSeries(daneSerie, localMapa);
+
+      var prediccion = modeloAR1(serie, climaIp, acpm);
+
+      // Stats de la serie
+      var precios14 = serie.slice(-14).map(function(d){return d.precio_kg;});
+      var med14 = Math.round(precios14.reduce(function(a,b){return a+b;},0)/precios14.length);
 
       var respuesta = {
-        ok: true, generado: new Date().toISOString(), fromCache: false, intento: intento,
-        historico: historico, prediccion: prediccion,
+        ok:          true,
+        generado:    new Date().toISOString(),
+        fromCache:   false,
+        intento:     intento,
+        historico:   serie,
+        prediccion:  prediccion,
         contexto: {
-          abastecimiento_ultimo:    abast.length ? abast[abast.length-1] : null,
-          clima_pronostico_ipiales: fcst,
-          acpm_gallon:              acpm,
-          precio_frontera:          front,
-          modelo:                   prediccion[0] && prediccion[0].componentes ? "AR1-adaptativo" : "simple",
+          precio_actual_kg:     serie[serie.length-1].precio_kg,
+          precio_actual_bulto:  serie[serie.length-1].precio_kg * BULTO_KG,
+          media14_kg:           med14,
+          media14_bulto:        med14 * BULTO_KG,
+          fuente_precio_actual: serie[serie.length-1].fuente,
+          dias_con_acopio:      serie.filter(function(d){return d.fuente==="acopio";}).length,
+          dias_con_dane:        serie.filter(function(d){return d.fuente==="dane";}).length,
+          clima_pronostico:     climaIp.pronostico.slice(0,7),
+          acpm_gallon:          acpm,
+          precio_frontera:      front,
+          bulto_kg:             BULTO_KG,
+          modelo:               "AR1-adaptativo-v2-ventana14d",
         },
       };
 
@@ -309,7 +368,7 @@ export default async function handler(req, res) {
 
   return res.status(503).json({
     ok: false,
-    error: ultimoError && ultimoError.name === "AbortError" ? "SIPSA no respondio a tiempo." : "Error: " + (ultimoError ? ultimoError.message : "desconocido"),
-    sugerencia: "El DANE actualiza precios despues de las 2 p.m. Los fines de semana puede estar inactivo.",
+    error: ultimoError && ultimoError.name === "AbortError" ? "DANE no respondio a tiempo." : "Error: " + (ultimoError ? ultimoError.message : "desconocido"),
+    sugerencia: "El DANE actualiza precios despues de las 2 p.m.",
   });
 }
