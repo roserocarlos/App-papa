@@ -257,7 +257,7 @@ var fmtF = function(f){
   var p=f.split("-");
   return ["dom","lun","mar","mie","jue","vie","sab"][dow]+" "+p[2]+"/"+p[1];
 };
-var sg = function(v){ return v>0?"+":"[lluvia]"; };
+var sg = function(v){ return v>0?"+":""; };
 
 function setUnidad(u) {
   _unidad = u;
@@ -311,7 +311,7 @@ function renderKpis() {
 
   // Stats panel
   var m14 = _unidad==="bulto" ? ctx.media14_bulto : ctx.media14_kg;
-  $("statsPanel").style.display="[lluvia]";
+  $("statsPanel").style.display="";
   $("statsBody").innerHTML =
     "Media 14d: <b>"+fmtCOP(m14)+"</b><br>" +
     "Precio hoy: <b>"+fmtCOP(hoyVal)+"</b><br>" +
@@ -324,12 +324,27 @@ function renderKpis() {
 function renderChart() {
   var h   = _datos.historico;
   var p   = _datos.prediccion;
-  var ult = h[h.length-1];
 
-  // Filtrar segun vista
-  var histVista = _vista > 0 ? h.slice(-_vista) : h;
+  // Filtrar: solo registros con precio > 0, ordenados por fecha
+  var hLimpio = h.filter(function(d){ return d.precio_kg > 0; });
+  hLimpio.sort(function(a,b){ return a.fecha < b.fecha ? -1 : 1; });
 
-  // Separar por fuente para colores distintos
+  // Vista: cortar por dias desde el final, o todo
+  var histVista;
+  if (_vista > 0) {
+    // Tomar los ultimos N dias de calendario desde la fecha mas reciente
+    var ultFecha = new Date(hLimpio[hLimpio.length-1].fecha + "T12:00:00Z");
+    var limFecha = new Date(ultFecha);
+    limFecha.setDate(limFecha.getDate() - _vista);
+    histVista = hLimpio.filter(function(d){ return new Date(d.fecha+"T12:00:00Z") >= limFecha; });
+  } else {
+    histVista = hLimpio;
+  }
+
+  if (!histVista.length) histVista = hLimpio.slice(-30);
+  var ult = histVista[histVista.length-1];
+
+  // Separar por fuente
   var xAco=[], yAco=[], xDane=[], yDane=[];
   histVista.forEach(function(d){
     var val = _unidad==="bulto" ? d.precio_kg*50 : d.precio_kg;
@@ -337,39 +352,61 @@ function renderChart() {
     else { xDane.push(d.fecha); yDane.push(val); }
   });
 
-  var xPred=[ult.fecha].concat(p.map(function(d){return d.fecha;}));
-  var yPred=[_unidad==="bulto"?ult.precio_kg*50:ult.precio_kg].concat(p.map(function(d){ return _unidad==="bulto"?d.precio_bulto:d.precio_kg; }));
+  var ultVal = _unidad==="bulto" ? ult.precio_kg*50 : ult.precio_kg;
+  var xPred  = [ult.fecha].concat(p.map(function(d){return d.fecha;}));
+  var yPred  = [ultVal].concat(p.map(function(d){ return _unidad==="bulto"?d.precio_bulto:d.precio_kg; }));
+
+  // Rango Y: min/max de los datos visibles con margen
+  var allY = yAco.concat(yDane).concat(yPred).filter(function(v){return v>0;});
+  var yMin = Math.max(0, Math.min.apply(null,allY) * 0.90);
+  var yMax = Math.max.apply(null,allY) * 1.08;
 
   Plotly.newPlot("chart", [
     {
       x:xDane, y:yDane, type:"scatter", mode:"lines+markers", name:"DANE Pasto",
       line:{color:"#52b788",width:2},
       marker:{size:4,color:"#52b788"},
-      hovertemplate:"%{x}<br><b>%{y:,.0f}</b><extra>DANE Pasto</extra>",
+      connectgaps:false,
+      hovertemplate:"%{x|%d/%m/%Y}<br><b>$%{y:,.0f}</b><extra>DANE Pasto</extra>",
     },
     {
       x:xAco, y:yAco, type:"scatter", mode:"lines+markers", name:"Acopio Ipiales",
       line:{color:"#2d6a4f",width:2.5},
-      marker:{size:6,color:"#2d6a4f",symbol:"diamond"},
-      hovertemplate:"%{x}<br><b>%{y:,.0f}</b><extra>Acopio Ipiales</extra>",
+      marker:{size:7,color:"#2d6a4f",symbol:"diamond"},
+      connectgaps:false,
+      hovertemplate:"%{x|%d/%m/%Y}<br><b>$%{y:,.0f}</b><extra>Acopio Ipiales</extra>",
     },
     {
       x:xPred, y:yPred, type:"scatter", mode:"lines+markers", name:"Prediccion",
       line:{color:"#c77b2e",width:2,dash:"dash"},
-      marker:{size:5,color:"#c77b2e",symbol:"circle-open",line:{width:2,color:"#c77b2e"}},
-      hovertemplate:"%{x}<br><b>~%{y:,.0f}</b><extra>Prediccion</extra>",
+      marker:{size:6,color:"#c77b2e",symbol:"circle-open",line:{width:2,color:"#c77b2e"}},
+      hovertemplate:"%{x|%d/%m/%Y}<br><b>~$%{y:,.0f}</b><extra>Prediccion</extra>",
     }
   ], {
-    margin:{t:8,l:68,r:12,b:44},
+    margin:{t:8,l:72,r:14,b:50},
     paper_bgcolor:"transparent", plot_bgcolor:"#f8faf5",
     font:{family:"IBM Plex Mono,monospace",size:10,color:"#6b7d6e"},
-    xaxis:{gridcolor:"#e2e8dc",showline:false,tickformat:"%d/%m"},
-    yaxis:{gridcolor:"#e2e8dc",showline:false,tickformat:",.0f",tickprefix:"$"},
+    xaxis:{
+      gridcolor:"#e2e8dc", showline:false,
+      type:"date",
+      tickformat:"%d/%m",
+      tickangle:-30,
+      nticks:8,
+    },
+    yaxis:{
+      gridcolor:"#e2e8dc", showline:false,
+      tickformat:",.0f", tickprefix:"$",
+      range:[yMin, yMax],
+    },
     hovermode:"x unified", showlegend:false,
-    shapes:[{type:"line",x0:ult.fecha,x1:ult.fecha,y0:0,y1:1,yref:"paper",
-      line:{color:"#d4dace",width:1.5,dash:"dot"}}],
-    annotations:[{x:ult.fecha,y:1,yref:"paper",text:"hoy",showarrow:false,
-      font:{size:9,color:"#6b7d6e"},xanchor:"left",xshift:4}],
+    shapes:[{
+      type:"line", x0:ult.fecha, x1:ult.fecha, y0:0, y1:1, yref:"paper",
+      line:{color:"#d4dace",width:1.5,dash:"dot"}
+    }],
+    annotations:[{
+      x:ult.fecha, y:0.97, yref:"paper", text:"hoy", showarrow:false,
+      font:{size:9,color:"#6b7d6e"}, xanchor:"left", xshift:4
+    }],
   }, {responsive:true, displayModeBar:false});
 }
 
@@ -388,21 +425,21 @@ function renderTabla() {
       "<td style='font-weight:600;color:var(--ocre);'>"+valKg+"</td>" +
       "<td style='color:var(--dim);'>"+valBulto+"</td>" +
       "<td class='"+cls+"'>"+sg(pct)+pct+"%</td></tr>";
-  }).join("[lluvia]");
-  $("predPanel").style.display="[lluvia]";
+  }).join(""));
+  $("predPanel").style.display="";
 }
 
 function renderClima(fcst) {
   if (!fcst || !fcst.length) return;
-  $("climaPanel").style.display="[lluvia]";
+  $("climaPanel").style.display="";
   $("climaBody").innerHTML = fcst.slice(0,7).map(function(d){
-    var ic = d.lluvia_mm>5?"[lluvia]":d.lluvia_mm>0?"[lluvia]":"[lluvia]";
+    var ic = d.lluvia_mm>5?"lluvia":d.lluvia_mm>0?"nublado":"sol";
     return "<div class='clima-dia'>" +
       "<div><div style='font-size:.68rem;'>"+ic+" "+fmtF(d.fecha)+"</div>" +
       "<div class='cf'>"+d.temp_min+"- "+d.temp_max+"C</div></div>" +
       "<div style='text-align:right;'><div class='cll'>"+d.lluvia_mm+" mm</div>" +
       "<div class='cf'>"+d.prob_lluvia+"% prob.</div></div></div>";
-  }).join("[lluvia]");
+  }).join(""));
 }
 
 function mostrarBanner(tipo, msg) {
@@ -435,7 +472,7 @@ function aplicar(){
 
 async function cargar(force) {
   var st=$("status");
-  st.className="[lluvia]"; st.innerHTML="<div class='sp'></div>Consultando DANE y acopio local...";
+  st.className=""; st.innerHTML="<div class='sp'></div>Consultando DANE y acopio local...";
   $("btnCsv").disabled=true;
   $("predPanel").style.display="none";
   $("climaPanel").style.display="none";
@@ -456,7 +493,7 @@ async function cargar(force) {
       return;
     }
     if (!r.ok||!data.ok){
-      mostrarBanner("err","Error: "+(data.error||"desconocido")+". "+(data.sugerencia||"[lluvia]"));
+      mostrarBanner("err","Error: "+(data.error||"desconocido")+". "+(data.sugerencia||""));
       st.className="err"; st.innerHTML="Sin datos disponibles";
       return;
     }
@@ -473,7 +510,7 @@ async function cargar(force) {
     } else if (data.fromCache){
       st.className="ok"; st.innerHTML="Cache "+data.cacheAge+" min - ultimo: "+fmtF(data.historico[data.historico.length-1].fecha);
     } else {
-      st.className="ok"; st.innerHTML="[lluvia]"+data.historico.length+" registros - ultimo: "+fmtF(data.historico[data.historico.length-1].fecha)+" - "+new Date(data.generado).toLocaleTimeString("es-CO");
+      st.className="ok"; st.innerHTML=""+data.historico.length+" registros - ultimo: "+fmtF(data.historico[data.historico.length-1].fecha)+" - "+new Date(data.generado).toLocaleTimeString("es-CO");
     }
   } catch(e){
     // En preview local sin backend, usar datos demo
